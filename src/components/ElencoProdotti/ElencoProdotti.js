@@ -6,7 +6,7 @@ import {
   ViewButton,
   ProductBrand,
   ProductPrice,
-} from "../styles/StyledElencoProdotti";
+} from "./StyledElencoProdotti";
 
 const ElencoProdotti = ({ products, filters }) => {
   // Filtra i prodotti in base ai criteri definiti in 'filters'

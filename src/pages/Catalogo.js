@@ -1,6 +1,7 @@
-import ElencoProdotti from "../components/ElencoProdotti";
-import CatalogoFilter from "../components/FilterCatalogo";
+import ElencoProdotti from "../components/ElencoProdotti/ElencoProdotti";
+import CatalogoFilter from "../components/FilterCatalogo/FilterCatalogo";
 import { useState } from "react";
+import TopBar from "../components/TopBar/TopBar";
 
 const CatalogoPage = () => {
 
@@ -74,6 +75,7 @@ const CatalogoPage = () => {
   
   return (
     <div>
+      <TopBar />
       <h1>Catalogo Prodotti</h1>
       <div style={{ display: "flex" }}>
         <CatalogoFilter
@@ -81,7 +83,6 @@ const CatalogoPage = () => {
           availableBrands={availableBrands}
           availableTypes={availableTypes}
         />
-        {/* Qui andrebbe la visualizzazione dei tuoi prodotti */}
         <ElencoProdotti products={dummyProducts} filters={filters} />
 
       </div>

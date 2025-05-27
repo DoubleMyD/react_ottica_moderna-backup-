@@ -5,7 +5,7 @@ import {
   ExpanderLabel,
   ExpanderArrow,
   ExpanderContent,
-} from "../styles/StyledExpander";
+} from "./StyledExpander";
 
 const Expander = ({ label, children }) => {
   const [isOpen, setIsOpen] = useState(false);

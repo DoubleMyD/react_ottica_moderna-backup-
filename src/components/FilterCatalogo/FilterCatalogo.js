@@ -8,8 +8,8 @@ import {
   FilterOptionsContainer,
   FilterOptionButton,
   FilterCatalogoButton,
-} from "../styles/StyledFilterCatalogo"; 
-import Expander from "./Expander";
+} from "../FilterCatalogo/StyledFilterCatalogo"; 
+import Expander from "../Expander/Expander";
 import { useState } from "react";
 
 const CatalogoFilter = ({
