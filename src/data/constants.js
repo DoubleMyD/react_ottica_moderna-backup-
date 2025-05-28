@@ -13,5 +13,6 @@ export const Pages = {
     COMPLETE_PROFILE: "/completa-profilo",
     CONTACT: "/contatti",
     REVIEWS: "/recensioni",
-    BRAND_STORY: "/brand-story"
+    BRAND_STORY: "/brand-story",
+    CLIENT_DASHBOARD: "/client-dashboard",
 };

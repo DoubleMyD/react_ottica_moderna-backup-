@@ -14,6 +14,7 @@ import CompletaProfilo from "./pages/CompleteProfile";
 import Catalogo from "./pages/Catalogo";
 import Contacts from "./pages/Contacts";
 import Reviews from "./pages/Reviews";
+import ClientDashboard from "./pages/ClientDashboard";
 
 
 function App() {
@@ -46,6 +47,11 @@ function App() {
             <Route
               path={Pages.REVIEWS}
               element={<Reviews />} />
+
+            <Route
+              path={Pages.CLIENT_DASHBOARD}
+              element={<ClientDashboard />}
+            />
           </Routes>
         </div>
       </Router>

@@ -19,13 +19,11 @@ const TopBar = () => {
 
   return (
     <TopBarContainer>
-      {/* TitleContainer is now a styled Link component itself */}
       <TitleContainer to={Pages.HOME}>
         <LogoImage src="https://github.com/DoubleMyD/react_ottica_moderna-backup-/blob/main/public/logo192.png?raw=true" />
         <h1>My Application</h1>
       </TitleContainer>
 
-      {/* Navigation Buttons (already correctly using as={Link} or styled(Link)) */}
       <PrimaryButton to={Pages.CATALOG}>Catalogo</PrimaryButton>
       <PrimaryButton to={Pages.CONTACT}>Contatti</PrimaryButton>
 
