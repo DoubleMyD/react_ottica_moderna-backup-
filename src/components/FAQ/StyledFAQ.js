@@ -1,9 +1,11 @@
 // src/styles/FAQStyledComponents.js
 import styled from "styled-components";
+import { Colors } from "../../styles/colors";
 
 export const FAQListContainer = styled.div`
   width: 90%;
   max-width: 800px;
+  background-color: ${Colors.lightBackground};
   margin: 40px auto; /* Center the list on the page */
   font-family: "Arial", sans-serif;
 `;

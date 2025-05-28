@@ -13,8 +13,8 @@ import {
   ReviewUser,
   ReviewDate,
 } from "../ReviewShowcase/StyledReviewCard";
-import { CarouselWrapper, CtaButton, ButtonContainer } from "../ReviewShowcase/StyledCarousel"; // Keep the wrapper
-
+import { CarouselWrapper} from "../ReviewShowcase/StyledCarousel"; // Keep the wrapper
+import { ButtonContainer, CtaButton } from "../../styles/StyledCTAButton"; 
 // Import Swiper React components
 import { Swiper, SwiperSlide } from "swiper/react";
 

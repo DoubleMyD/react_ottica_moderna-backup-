@@ -3,8 +3,8 @@ import React from "react";
 import { FaEnvelope, FaPhone, FaMapMarkerAlt } from "react-icons/fa";
 
 import {
-  ShopContactContainer,
-  ShopContactContentWrapper,
+  ContactContainer,
+  ContactContentWrapper,
   ContactInfoSection,
   SectionTitle,
   ContactLine,
@@ -30,10 +30,10 @@ const contactInfo = {
 
 const ShopContactSection = () => {
   return (
-    <ShopContactContainer>
+    <ContactContainer>
       <SectionTitle>Contatti e Dove Trovarci</SectionTitle>{" "}
       {/* Updated title */}
-      <ShopContactContentWrapper>
+      <ContactContentWrapper>
         <ContactInfoSection>
           <ContactLine>
             <FaEnvelope />{" "}
@@ -60,8 +60,8 @@ const ShopContactSection = () => {
             title="Google Map of Our Location"
           ></iframe>
         </MapContainer>
-      </ShopContactContentWrapper>
-    </ShopContactContainer>
+      </ContactContentWrapper>
+    </ContactContainer>
   );
 };
 

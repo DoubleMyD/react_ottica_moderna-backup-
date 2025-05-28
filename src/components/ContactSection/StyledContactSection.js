@@ -1,21 +1,21 @@
-// src/styles/ShopContactStyledComponents.js
 import styled from "styled-components";
+import { Colors } from "../../styles/colors";
 
-export const ShopContactContainer = styled.div`
-  background-color: #f8f9fa; /* Light background for the section */
+export const ContactContainer = styled.div`
+  background-color: ${Colors.lightBackground}; /* Light background for the section */
   padding: 50px 20px; /* Ample padding top/bottom and sides */
   margin-top: 60px; /* Space above this section from content above */
-  border-top: 1px solid #e9ecef; /* Subtle separator from previous content */
+  border-top: 1px solid ${Colors.lightBorder}; /* Subtle separator from previous content */
   text-align: center; /* Center the title if it's there */
   font-family: "Arial", sans-serif;
-  color: #343a40; /* Darker text color */
+  color: ${Colors.darkText}; /* Darker text color */
 
   @media (max-width: 768px) {
     padding: 40px 15px;
   }
 `;
 
-export const ShopContactContentWrapper = styled.div`
+export const ContactContentWrapper = styled.div`
   display: flex;
   justify-content: center; /* Center content horizontally */
   align-items: flex-start; /* Align items to the top (useful if other side has taller content) */
@@ -44,7 +44,7 @@ export const ContactInfoSection = styled.div`
 
 export const SectionTitle = styled.h3`
   font-size: 2rem;
-  color: #2c3e50;
+  color: ${Colors.darkSectionTitle};
   margin-bottom: 25px;
   text-align: center; /* Center the title itself */
 
@@ -59,7 +59,7 @@ export const ContactLine = styled.p`
   margin-bottom: 10px; /* Space between each line */
   display: flex; /* Use flex to align icon and text */
   align-items: center;
-  color: #495057;
+  color: ${Colors.mediumGray};
 
   &:last-child {
     margin-bottom: 0; /* No margin after the last line */
@@ -67,12 +67,12 @@ export const ContactLine = styled.p`
 
   svg {
     margin-right: 10px; /* Space between icon and text */
-    color: #007bff; /* Icon color */
+    color: ${Colors.primaryBlue}; /* Icon color */
     min-width: 20px; /* Ensure icon has space */
   }
 
   a {
-    color: #007bff; /* Link color */
+    color: ${Colors.linkColor}; /* Link color */
     text-decoration: none;
     &:hover {
       text-decoration: underline;

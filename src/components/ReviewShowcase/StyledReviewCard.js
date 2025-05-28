@@ -1,8 +1,8 @@
-// src/styles/ReviewCardStyledComponents.js
 import styled from "styled-components";
+import { Colors } from "../../styles/colors";
 
 export const ReviewCardContainer = styled.div`
-  background-color: #ffffff;
+  background-color: #ffffff; /* White background for the card */
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
@@ -25,7 +25,7 @@ export const ReviewHeader = styled.div`
 `;
 
 export const StarRating = styled.div`
-  color: #ffc107; /* Gold color for stars */
+  color: ${Colors.starGold};
   font-size: 1.2rem;
   span {
     margin-right: 2px;
@@ -35,12 +35,12 @@ export const StarRating = styled.div`
 export const ReviewTitle = styled.h3`
   font-size: 1.2rem;
   margin: 0;
-  color: #333;
+  color: ${Colors.darkText};
 `;
 
 export const ReviewMeta = styled.div`
   font-size: 0.9rem;
-  color: #666;
+  color: ${Colors.lightSubtitle};
   margin-top: 5px;
   display: flex;
   justify-content: space-between;
@@ -48,7 +48,7 @@ export const ReviewMeta = styled.div`
 
 export const ReviewDescription = styled.p`
   font-size: 1rem;
-  color: #555;
+  color: ${Colors.mediumGray};
   line-height: 1.5;
   margin-top: 15px;
   flex-grow: 1; /* Allow description to take up available space */

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../data/authContext";
-import { STRAPI_BASE_URL } from "../../data/api";
+import { Link, useNavigate } from "react-router-dom"; // Keep Link for other buttons
+import { useAuth } from "../../data/authContext"; // Assuming these are needed
+import { STRAPI_BASE_URL } from "../../data/api"; // Assuming these are needed
 import { Pages } from "../../data/constants";
 
 import {
@@ -9,28 +9,42 @@ import {
   SecondaryButton,
   TopBarContainer,
   TitleContainer,
+  LogoImage,
 } from "../TopBar/TopBarStyledComponent.js";
 
 const TopBar = () => {
 
   const navigate = useNavigate();
+  // const { user, logout } = useAuth(); // Assuming you'll use authentication state later
 
   return (
     <TopBarContainer>
-      <TitleContainer>
+      {/* TitleContainer is now a styled Link component itself */}
+      <TitleContainer to={Pages.HOME}>
+        <LogoImage src="https://github.com/DoubleMyD/react_ottica_moderna-backup-/blob/main/public/logo192.png?raw=true" />
         <h1>My Application</h1>
       </TitleContainer>
-      
-      <PrimaryButton as={Link} to={Pages.CATALOG}>Catalogo</PrimaryButton>
-      
-      <PrimaryButton as={Link} to={Pages.CONTACT}>Contatti</PrimaryButton>
 
-      <SecondaryButton as={Link} to={Pages.LOGIN}>Login</SecondaryButton>
-      
-      <SecondaryButton as={Link} to={Pages.REVIEWS}>Recensioni</SecondaryButton>
-      
-      <SecondaryButton as={Link} to={Pages.BRAND_STORY}>BrandStory</SecondaryButton>
-    
+      {/* Navigation Buttons (already correctly using as={Link} or styled(Link)) */}
+      <PrimaryButton to={Pages.CATALOG}>Catalogo</PrimaryButton>
+      <PrimaryButton to={Pages.CONTACT}>Contatti</PrimaryButton>
+
+      <SecondaryButton to={Pages.LOGIN}>Login</SecondaryButton>
+      <SecondaryButton to={Pages.REVIEWS}>Recensioni</SecondaryButton>
+      <SecondaryButton to={Pages.BRAND_STORY}>BrandStory</SecondaryButton>
+
+      {/* Example for Logout/Admin (future use):
+      {user ? (
+        <>
+          {user.role === 'admin' && (
+            <PrimaryButton to={Pages.ADMIN}>Admin Dashboard</PrimaryButton>
+          )}
+          <SecondaryButton onClick={logout}>Logout</SecondaryButton>
+        </>
+      ) : (
+        <SecondaryButton to={Pages.LOGIN}>Login</SecondaryButton>
+      )}
+      */}
     </TopBarContainer>
   );
 };

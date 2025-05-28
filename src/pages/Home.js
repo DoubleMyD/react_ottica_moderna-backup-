@@ -3,6 +3,7 @@ import ReviewCarousel from "../components/ReviewShowcase/ReviewShowcase";
 import FAQList from "../components/FAQ/FAQList";
 import ContactSection from "../components/ContactSection/ContactSection";
 import React from "react";
+import ShopShowcaseSection from "../components/HomeShowcase/HomeShowcase";
 
 const Home = () => {
   const dummyReviews = [
@@ -76,6 +77,7 @@ const Home = () => {
   return (
     <div>
       <TopBar />
+      <ShopShowcaseSection />
       <ReviewCarousel reviews={dummyReviews} />
       <FAQList faqs={dummyFAQs} />
       <ContactSection />
