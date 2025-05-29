@@ -1,12 +1,11 @@
 // src/components/ClientDashboard/ClientDashboard.jsx
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../data/authContext"; // Assuming you have an auth context
-import { Pages } from "../data/constants"; // For logout redirect
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../data/authContext";
+import { Pages } from "../data/constants";
 
-import ClientProfileSection from "../components/ClientProfile/ClientProfileSection"; // Your existing profile component
-import PurchaseHistorySection from "../components/ClientPurchase/ClientPurchase"; // The new placeholder component
-import TopBar from "../components/TopBar/TopBar";
+import ClientProfileSection from "../components/ClientProfile/ClientProfileSection";
+import PurchaseHistorySection from "../components/ClientPurchase/ClientPurchase"; // <--- Import new section
 
 import {
   DashboardLayout,
@@ -15,15 +14,36 @@ import {
   LogoutButton,
   MainContent,
 } from "../styles/StyledClientDashboard";
+import TopBar from "../components/TopBar/TopBar";
 
 const ClientDashboard = () => {
-  const [activeSection, setActiveSection] = useState("profile"); // Default section is 'profile'
+  const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth(); // Assuming useAuth provides a logout function
+  const { logout } = useAuth();
+
+  // Initialize activeSection based on URL query param, default to 'profile'
+  const getActiveSectionFromUrl = () => {
+    const params = new URLSearchParams(location.search);
+    return params.get("section") || "profile";
+  };
+
+  const [activeSection, setActiveSection] = useState(getActiveSectionFromUrl);
+
+  // Effect to update URL when activeSection changes
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set("section", activeSection);
+    navigate(`?${params.toString()}`, { replace: true }); // Use replace to avoid polluting history
+  }, [activeSection, navigate]);
+
+  // Effect to update activeSection when URL changes (e.g., from browser back/forward)
+  useEffect(() => {
+    setActiveSection(getActiveSectionFromUrl());
+  }, [location.search]); // Depend on location.search to react to URL query changes
 
   const handleLogout = () => {
-    logout(); // Perform logout logic (clear tokens, etc.)
-    navigate(Pages.HOME); // Redirect to home page after logout
+    logout();
+    navigate(Pages.HOME);
   };
 
   const renderActiveSection = () => {
@@ -33,14 +53,11 @@ const ClientDashboard = () => {
       case "purchases":
         return <PurchaseHistorySection />;
       default:
-        return <ClientProfileSection />; // Fallback to profile
+        return <ClientProfileSection />;
     }
   };
 
   return (
-    <div>
-      <TopBar />
-
       <DashboardLayout>
         <Sidebar>
           <SidebarItem
@@ -59,7 +76,6 @@ const ClientDashboard = () => {
         </Sidebar>
         <MainContent>{renderActiveSection()}</MainContent>
       </DashboardLayout>
-    </div>
   );
 };
 

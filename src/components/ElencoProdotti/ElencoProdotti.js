@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import {
   ProductListContainer,
   ProductCard,
@@ -9,6 +10,8 @@ import {
 } from "./StyledElencoProdotti";
 
 const ElencoProdotti = ({ products, filters }) => {
+  const navigate = useNavigate();
+
   // Filtra i prodotti in base ai criteri definiti in 'filters'
   const filteredProducts = products.filter((product) => {
     let matchesBrand = true;
@@ -48,9 +51,7 @@ const ElencoProdotti = ({ products, filters }) => {
           <ProductPrice>€{product.price.toFixed(2)}</ProductPrice>
           <ProductImagePlaceholder>immagine</ProductImagePlaceholder>
           <ProductAction>
-            <ViewButton
-              onClick={() => console.log(`View product ${product.id}`)}
-            >
+            <ViewButton onClick={() => navigate(`/catalogo/${product.id}`)}>
               Vedi
             </ViewButton>
           </ProductAction>

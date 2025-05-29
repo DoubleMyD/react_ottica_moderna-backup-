@@ -76,7 +76,6 @@ const Home = () => {
 
   return (
     <div>
-      <TopBar />
       <ShopShowcaseSection />
       <ReviewCarousel reviews={dummyReviews} />
       <FAQList faqs={dummyFAQs} />

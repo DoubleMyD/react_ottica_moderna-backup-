@@ -8,7 +8,6 @@ const AdminPage = () => {
 
     return (
         <div>
-            <TopBar />
         </div>
     )
 }
