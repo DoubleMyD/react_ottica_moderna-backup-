@@ -53,7 +53,7 @@ export const LoginButton = styled.button`
   padding: 12px;
   border-radius: 50px;
   cursor: pointer;
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   font-weight: bold;
   color: white;
   font-size: 16px;
@@ -61,6 +61,17 @@ export const LoginButton = styled.button`
 
   &:hover {
     background: #004999;
+  }
+
+  /* Styles for the disabled state */
+  &:disabled {
+    background: #cccccc; /* A light gray color for disabled state */
+    cursor: not-allowed; /* Indicate that the button is not interactive */
+    opacity: 0.7; /* Slightly reduce opacity to make it look less prominent */
+    /* You can also remove the hover effect for disabled state */
+    &:hover {
+      background: #cccccc; /* Keep the same disabled background on hover */
+    }
   }
 `;
 

@@ -1,10 +1,10 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const ProfileFormContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column; 
+  flex-direction: column;
   min-height: 100vh;
   background-color: #f9f9f9;
   padding: 20px;
@@ -17,7 +17,6 @@ export const ProfileTitle = styled.h1`
   text-align: center;
   margin-bottom: 30px;
 `;
-
 
 export const ProfileForm = styled.form`
   background: #ffffff;
@@ -47,6 +46,13 @@ export const ProfileInput = styled.input`
     outline: none;
     border-color: #007bff;
   }
+
+  /* Disabled styles */
+  &:disabled {
+    background-color: #e9ecef; /* Lighter background */
+    cursor: not-allowed; /* No interaction cursor */
+    opacity: 0.7; /* Slightly faded look */
+  }
 `;
 
 export const ProfileButton = styled.button`
@@ -62,4 +68,30 @@ export const ProfileButton = styled.button`
   &:hover {
     background-color: #0056b3;
   }
+
+  /* Disabled styles */
+  &:disabled {
+    background: #cccccc; /* Lighter gray for disabled */
+    cursor: not-allowed; /* Indicate non-interactable */
+    opacity: 0.7; /* Slightly faded look */
+    &:hover {
+      /* Override hover effect when disabled */
+      background: #cccccc;
+    }
+  }
+`;
+
+// New styled components for error and loader messages
+export const ErrorMessage = styled.p`
+  color: red;
+  font-size: 0.9em;
+  margin-bottom: 15px;
+  text-align: center;
+`;
+
+export const Loader = styled.p`
+  color: #007bff; /* Example color */
+  font-size: 1em;
+  margin-bottom: 15px;
+  text-align: center;
 `;

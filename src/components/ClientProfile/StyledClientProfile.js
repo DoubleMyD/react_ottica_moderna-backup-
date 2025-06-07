@@ -233,3 +233,22 @@ export const Checkbox = styled.input.attrs({ type: "checkbox" })`
     }
   }
 `;
+
+// New styled components for error and loader messages (from previous turn)
+export const ErrorMessage = styled.p`
+  color: ${Colors.errorRed};
+  font-size: 0.9em;
+  width: 20%;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: bold;
+`;
+
+export const Loader = styled.p`
+  color: ${Colors.primaryBlue};
+  font-size: 1em;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: bold;
+`;
+

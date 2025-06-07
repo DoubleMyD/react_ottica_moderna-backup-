@@ -9,7 +9,10 @@ const AuthContext = createContext(); //create a global context for the authentic
 
 //wraps all the application, so that all the child components can access the context
 export const AuthProvider = ({ children }) => {
-    
+
+    // State to hold the JWT token
+    const [authToken, setAuthToken] = useState(localStorage.getItem("jwt"));
+
     //state to check if the user is authenticated or not (if the token exists, set it to true)
     const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("jwt"));
 
@@ -17,35 +20,44 @@ export const AuthProvider = ({ children }) => {
     const [role, setRole] = useState(localStorage.getItem("role") || "");
 
     //useEffect to check if the user is authenticated or not during the load of the application
+    // This useEffect will now also initialize authToken from localStorage
     useEffect(() => {
         const token = localStorage.getItem("jwt");
-        const role = localStorage.getItem("role");
+        const storedRole = localStorage.getItem("role"); // Use a different name to avoid conflict with state setter
 
         if(token) {
+            setAuthToken(token); // Set the authToken state
             setIsAuthenticated(true);
-            setRole(role);
+            setRole(storedRole || ""); // Ensure role is not null
+        } else {
+            // Clear states if token is not found on load
+            setAuthToken(null);
+            setIsAuthenticated(false);
+            setRole("");
         }
     }, []);
 
     //function to set the authentication state in the locale storage at login
-    const login = (token, role = "user") => {
+    const login = (token, userRole = "user") => { // Use userRole to avoid conflict
         localStorage.setItem("jwt", token);
-        localStorage.setItem("role", role);
+        localStorage.setItem("role", userRole);
+        setAuthToken(token); // Update authToken state
         setIsAuthenticated(true);
-        setRole(role);
+        setRole(userRole);
     };
 
     //reset the authentication state in the locale storage at logout
     const logout = () => {
         localStorage.removeItem("jwt");
         localStorage.removeItem("role");
+        setAuthToken(null); // Clear authToken state
         setIsAuthenticated(false);
-        setRole(null);
+        setRole(null); // Set role to null on logout
     };
 
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, role, login, logout }}>
+        <AuthContext.Provider value={{ isAuthenticated, role, login, logout, authToken }}>
             {children}
         </AuthContext.Provider>
     );

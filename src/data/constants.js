@@ -1,7 +1,7 @@
 export class Role {
-    static ADMIN = "admin";
-    static CLIENT = "client";
-    static USER = "user";
+    static ADMIN = "Amministratore";
+    static CLIENT = "Authenticated";
+    static USER = "Public";
 };
 
 export const Pages = {

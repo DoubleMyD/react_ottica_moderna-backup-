@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const RegisterContainer = styled.div`
   display: flex;
@@ -45,6 +45,13 @@ export const RegisterInput = styled.input`
     border-color: #0056b3;
     outline: none;
   }
+
+  /* Disabled styles for input */
+  &:disabled {
+    background-color: #e9ecef; /* Lighter background */
+    cursor: not-allowed; /* No interaction cursor */
+    opacity: 0.7; /* Slightly faded look */
+  }
 `;
 
 export const RegisterSelect = styled.select`
@@ -57,6 +64,13 @@ export const RegisterSelect = styled.select`
   &:focus {
     border-color: #0056b3;
     outline: none;
+  }
+
+  /* Disabled styles for select */
+  &:disabled {
+    background-color: #e9ecef; /* Lighter background */
+    cursor: not-allowed; /* No interaction cursor */
+    opacity: 0.7; /* Slightly faded look */
   }
 `;
 
@@ -85,34 +99,30 @@ export const RegisterButton = styled.button`
   &:hover {
     background: #004999;
   }
-`;
 
-export const ShippingOptions = styled.div`
-  margin-top: 15px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  overflow: hidden;
-`;
-
-export const ShippingOption = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  cursor: pointer;
-  background: #f9f9f9;
-  border-bottom: 1px solid #ddd;
-
-  &:hover {
-    background: #e9ecef;
-  }
-
-  &:last-child {
-    border-bottom: none;
+  /* Disabled styles for button */
+  &:disabled {
+    background: #cccccc; /* Lighter gray for disabled */
+    cursor: not-allowed; /* Indicate non-interactable */
+    opacity: 0.7; /* Slightly faded look */
+    &:hover {
+      /* Override hover effect when disabled */
+      background: #cccccc;
+    }
   }
 `;
 
-export const ShippingPrice = styled.span`
-  font-size: 16px;
-  font-weight: bold;
+// Add these new styled components if they are not already there
+export const ErrorMessage = styled.p`
+  color: red;
+  font-size: 0.9em;
+  margin-bottom: 15px;
+  text-align: center;
+`;
+
+export const Loader = styled.p`
+  color: #007bff; /* Example color */
+  font-size: 1em;
+  margin-bottom: 15px;
+  text-align: center;
 `;

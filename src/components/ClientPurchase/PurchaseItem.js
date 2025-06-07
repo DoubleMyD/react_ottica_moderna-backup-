@@ -41,8 +41,9 @@ const PurchaseItem = ({ purchase }) => {
             <tr>
               <th>Prodotto</th>
               <th>Quantità</th>
-              <th>Prezzo Unitario</th>
-              <th>Prezzo Attuale</th>
+              <th>Prezzo Unitario Catalogo</th>
+              <th>Prezzo Unitario Vendita</th>
+              <th>Sconto Applicato</th>
             </tr>
           </thead>
           <tbody>
@@ -97,6 +98,20 @@ const PurchaseItem = ({ purchase }) => {
                         </span>
                       )}
                     </PriceInfo>
+                  </td>
+                  <td>
+                    {item.actualPrice < item.unitPriceAtPurchase ? (
+                      <span className="discount-info">
+                        {(
+                          ((item.unitPriceAtPurchase - item.actualPrice) /
+                            item.unitPriceAtPurchase) *
+                          100
+                        ).toFixed(2)}
+                        %
+                      </span>
+                    ) : (
+                      <span>Nessuno</span>
+                    )}
                   </td>
                 </tr>
               );

@@ -32,10 +32,7 @@ function App() {
               element={<CompletaProfilo />}
             />
             <Route path={Pages.LOGIN} element={<LoginPage />} />
-            <Route
-              path={Pages.COMPLETE_PROFILE}
-              element={<CompletaProfilo />}
-            />
+            <Route path={Pages.REGISTER} element={<Register />} />
 
             {/* Routes that DO have TopBar - Wrapped by MainLayout */}
             <Route element={<MainLayout />}>
@@ -44,7 +41,6 @@ function App() {
               <Route path={Pages.HOME} element={<Home />} />
               <Route path={Pages.ADMIN} element={<AdminPage />} />
               <Route path={Pages.CATALOG} element={<Catalogo />} />
-              <Route path={Pages.REGISTER} element={<Register />} />
               <Route path={Pages.CONTACT} element={<Contacts />} />
               <Route path={Pages.REVIEWS} element={<Reviews />} />
               <Route

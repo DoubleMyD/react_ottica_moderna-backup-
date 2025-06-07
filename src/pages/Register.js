@@ -6,96 +6,168 @@ import {
   RegisterLabel,
   RegisterInput,
   RegisterButton,
+  ErrorMessage, // Assuming you have this styled component for errors
+  Loader, // Assuming you have this styled component for loading
 } from "../styles/StyledRegisterComponents";
 
 import { useNavigate } from "react-router-dom";
 import { STRAPI_BASE_URL } from "../data/api"; 
+import { Pages } from "../data/constants";
 
 const Register = () => {
-    const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        password: '',
-    });
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
 
-    const navigate = useNavigate(); // initiate useNavigate
+  const [error, setError] = useState(null); // State to check if there is an error
+  const [loading, setLoading] = useState(false); // State to handle loading state
+  const [showReloadButton, setShowReloadButton] = useState(false); // New state for reload button
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prevData) => ({
-          ...prevData,
-          [name]: value,
-        }));
-    };
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch(`${STRAPI_BASE_URL}/auth/local/register`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username: formData.username,
-                    email: formData.email,
-                    password: formData.password,
-                }),
-            });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+  // Function to reset the form and error states
+  const resetFormState = () => {
+    setError(null);
+    setLoading(false);
+    setShowReloadButton(false);
+  };
 
-            const data = await response.json();
-            localStorage.setItem('jwt', data.jwt); // Store JWT in local storage
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true); // Set loading to true
+    setError(null); // Reset error
+    setShowReloadButton(false); // Hide reload button initially
 
-            console.log('Registration successful:', data);
-            navigate('/complete-profile'); // Redirect to complete profile page after successful registration
-        } catch (error) {
-            console.error('Error during registration:', error);
+    const controller = new AbortController(); // Create an AbortController
+    const id = setTimeout(() => controller.abort(), 10000); // Set timeout for 10 seconds
+
+    try {
+      const response = await fetch(`${STRAPI_BASE_URL}/auth/local/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        }),
+        signal: controller.signal, // Pass the abort signal
+      });
+
+      clearTimeout(id); // Clear the timeout if fetch completes before 10s
+
+      if (!response.ok) {
+        if (response.status === 400) {
+          // Strapi often returns 400 for existing users/emails
+          const errorData = await response.json();
+          if (errorData && errorData.error && errorData.error.message) {
+            setError(`Registrazione fallita: ${errorData.error.message}`);
+          } else {
+            setError(
+              "Registrazione fallita: Credenziali non valide o utente già esistente."
+            );
+          }
+        } else {
+          setError(
+            `Errore del server: ${response.status}. Impossibile registrarsi.`
+          );
         }
+        setShowReloadButton(true); // Show reload button for server errors
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      localStorage.setItem("jwt", data.jwt); // Store JWT in local storage
+
+      console.log("Registration successful:", data);
+      navigate(Pages.COMPLETE_PROFILE); // Redirect to complete profile page
+    } catch (error) {
+      if (error.name === "AbortError") {
+        setError(
+          "Il server non ha risposto in tempo. Controlla la tua connessione o riprova."
+        );
+        setShowReloadButton(true); // Show reload button on timeout
+      } else {
+        console.error("Error during registration:", error);
+        setError(
+          "Si è verificato un errore inaspettato durante la registrazione. Riprova."
+        );
+        setShowReloadButton(true); // Show reload button for other unexpected errors
+      }
+    } finally {
+      setLoading(false); // Stop loading
+      clearTimeout(id); // Ensure timeout is cleared in all cases
     }
+  };
 
-    return (
-      <RegisterContainer>
-        <RegisterForm onSubmit={handleSubmit}>
-          <RegisterTitle>Ottica Moderna - Registrazione</RegisterTitle>
+  return (
+    <RegisterContainer>
+      <RegisterForm onSubmit={handleSubmit}>
+        <RegisterTitle>Ottica Moderna - Registrazione</RegisterTitle>
 
-          <RegisterLabel>Username</RegisterLabel>
-          <RegisterInput
-            type="text"
-            name="username"
-            placeholder="Username"
-            value={formData.username}
-            onChange={handleChange}
-            required
-          />
+        {/* Error Message Display */}
+        {error && <ErrorMessage>{error}</ErrorMessage>}
 
-          <RegisterLabel>Email</RegisterLabel>
-          <RegisterInput
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+        {/* Loading Indicator */}
+        {loading && <Loader>Registrazione in corso...</Loader>}
 
-          <RegisterLabel>Password</RegisterLabel>
-          <RegisterInput
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
+        {/* Reload/Reset Button */}
+        {showReloadButton && (
+          <RegisterButton type="button" onClick={resetFormState}>
+            Riprova
+          </RegisterButton>
+        )}
 
-          <RegisterButton type="submit">Registrati</RegisterButton>
-        </RegisterForm>
-      </RegisterContainer>
-    );
+        <RegisterLabel>Username</RegisterLabel>
+        <RegisterInput
+          type="text"
+          name="username"
+          placeholder="Username"
+          value={formData.username}
+          onChange={handleChange}
+          required
+          disabled={loading || showReloadButton} // Disable inputs
+        />
+
+        <RegisterLabel>Email</RegisterLabel>
+        <RegisterInput
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          disabled={loading || showReloadButton} // Disable inputs
+        />
+
+        <RegisterLabel>Password</RegisterLabel>
+        <RegisterInput
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          disabled={loading || showReloadButton} // Disable inputs
+        />
+
+        <RegisterButton type="submit" disabled={loading || showReloadButton}>
+          Registrati
+        </RegisterButton>
+      </RegisterForm>
+    </RegisterContainer>
+  );
 };
 
 export default Register;
