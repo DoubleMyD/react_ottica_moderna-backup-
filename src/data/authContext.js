@@ -4,6 +4,7 @@ import {
     useContext,
     useEffect 
 } from "react";
+import { Role } from "./constants";
 
 const AuthContext = createContext(); //create a global context for the authentication that can be used in all the application
 
@@ -38,7 +39,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     //function to set the authentication state in the locale storage at login
-    const login = (token, userRole = "user") => { // Use userRole to avoid conflict
+    const login = (token, userRole = Role.USER) => { // Use userRole to avoid conflict
         localStorage.setItem("jwt", token);
         localStorage.setItem("role", userRole);
         setAuthToken(token); // Update authToken state

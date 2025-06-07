@@ -1,5 +1,5 @@
 // src/components/ClientProfileSection/ClientProfileSection.jsx
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import useUserAndClienteData from "../../data/useUserAndClienteData";
 import {
   ProfileContainer,
@@ -45,10 +45,32 @@ const ClientProfileSection = () => {
 
   const [originalData, setOriginalData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-  const [localError, setLocalError] = useState(null); // This state holds the warning message
+  const [localError, setLocalError] = useState(null); // For client-side errors and data-related messages
   const [isSaving, setIsSaving] = useState(false);
 
-  // === START ADDITION ===
+  const [showApiError, setShowApiError] = useState(false);
+  const apiErrorTimerRef = useRef(null);
+
+  // Effect for delaying API error display (errors from useUserAndClienteData hook)
+  useEffect(() => {
+    if (error) {
+      apiErrorTimerRef.current = setTimeout(() => {
+        setShowApiError(true);
+      }, 1000); // 1000ms delay for displaying the error
+    } else {
+      if (apiErrorTimerRef.current) {
+        clearTimeout(apiErrorTimerRef.current);
+      }
+      setShowApiError(false);
+    }
+
+    return () => {
+      if (apiErrorTimerRef.current) {
+        clearTimeout(apiErrorTimerRef.current);
+      }
+    };
+  }, [error]);
+
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prevData) => ({
@@ -56,20 +78,15 @@ const ClientProfileSection = () => {
       [name]: type === "checkbox" ? checked : value,
     }));
   }, []);
-  // === END ADDITION ===
 
   const mapStrapiDataToFormData = useCallback((clientObj, userObj) => {
-    // === START MODIFICATION ===
-    // If clientObj has an 'attributes' property, use it. Otherwise, assume clientObj itself contains the attributes.
     const clientAttributes = clientObj?.attributes || clientObj || {};
-    // === END MODIFICATION ===
-
     const userAttributes = userObj || {};
 
     return {
       email: userAttributes.email || "",
       username: userAttributes.username || "",
-      nationality: clientAttributes.nazione || "",
+      nationality: clientAttributes.nazionalita || "",
       name: clientAttributes.nome || "",
       city: clientAttributes.citta || "",
       surname: clientAttributes.cognome || "",
@@ -82,36 +99,81 @@ const ClientProfileSection = () => {
     };
   }, []);
 
+  // Effect to manage form data, editing state, and data-related local errors (like "no profile" or "essential data missing")
   useEffect(() => {
-    if (userData || clienteData) {
+    // Phase 1: While still loading, ensure any local errors related to data absence are not set.
+    // This prevents flashes during initial data fetch.
+    if (loading) {
+      if (
+        localError ===
+          "Nessun profilo cliente trovato. Completa il modulo per crearne uno." ||
+        localError === "Impossibile caricare i dati essenziali del profilo."
+      ) {
+        setLocalError(null); // Clear it if it was set prematurely
+      }
+      return; // Exit early if still loading
+    }
+
+    // Phase 2: Loading is complete. Now, set form data and determine profile status.
+    if (userData) {
       const mapped = mapStrapiDataToFormData(clienteData, userData);
+
+      // Check if essential user data (like email) is missing *after* mapping
+      if (!mapped.email) {
+        setLocalError("Impossibile caricare i dati essenziali del profilo.");
+        setIsEditing(false); // Cannot edit if essential user data is missing
+        setFormData(mapped); // Still set what could be mapped (e.g., username)
+        setOriginalData(mapped);
+        return; // Exit early as essential data is problematic
+      }
+
       setFormData(mapped);
       setOriginalData(mapped);
+
+      // If we made it here, essential user data is present. Now check client profile.
       if (!clienteData) {
-        setIsEditing(true);
-        // Set the message when no client data is found
+        // Confirmed: loading complete, userData exists, but no client profile data found.
+        setIsEditing(true); // Allow user to create profile
         setLocalError(
           "Nessun profilo cliente trovato. Completa il modulo per crearne uno."
         );
       } else {
+        // All good: client data exists
         setIsEditing(false);
-        // Clear this specific error if client data exists
-        setLocalError(null);
+        setLocalError(null); // Clear any previous local errors if data is now present
       }
+    } else {
+      // Fallback: userData is missing even after loading is complete (a critical issue)
+      // This means authentication or user data fetch failed fundamentally.
+      setLocalError("Impossibile caricare i dati essenziali del profilo.");
+      setIsEditing(false);
+      // Clear form fields if essential user data cannot be loaded
+      setFormData({
+        email: "",
+        username: "",
+        nationality: "",
+        name: "",
+        city: "",
+        surname: "",
+        postalCode: "",
+        dateOfBirth: "",
+        address: "",
+        newsletterSubscription: false,
+      });
+      setOriginalData({});
     }
-  }, [userData, clienteData, mapStrapiDataToFormData]);
+  }, [userData, clienteData, mapStrapiDataToFormData, loading, localError]); // Added localError to dependency array
 
   const handleEdit = useCallback(() => {
     setIsEditing(true);
-    // Removed setLocalError(null) here. The useEffect handles the error state based on clienteData.
   }, []);
 
   const handleSave = useCallback(async () => {
-    setLocalError(null); // Clear local errors on save attempt
+    setLocalError(null); // Clear any existing local errors on save attempt
     setIsSaving(true);
 
     if (!formData.name || !formData.surname) {
-      setLocalError("Nome e Cognome sono campi obbligatori.");
+      setLocalError("Nome e Cognome sono campi obbligatori."); // This local error is immediate
       setIsSaving(false);
       return;
     }
@@ -140,9 +202,9 @@ const ClientProfileSection = () => {
       cognome: formData.surname,
       data_nascita: formData.dateOfBirth,
       indirizzo: formData.address,
-      cap: parseInt(formData.postalCode, 10),
+      cap: formData.postalCode ? parseInt(formData.postalCode, 10) : null,
       citta: formData.city,
-      nazione: formData.nationality,
+      nazionalita: formData.nationality,
       iscrizione_newsletter: formData.newsletterSubscription,
     };
 
@@ -153,34 +215,33 @@ const ClientProfileSection = () => {
     if (success) {
       setIsEditing(false);
       alert("Profilo aggiornato con successo!");
-      // The useEffect will re-run after updateClienteProfile causes a refetch
-      // and will clear localError if clienteData is now present.
     } else {
+      // If there's an API error during save, set it to localError for immediate display
       setLocalError(apiError || "Errore sconosciuto durante il salvataggio.");
     }
     setIsSaving(false);
   }, [formData, originalData, updateClienteProfile]);
 
   const handleCancel = useCallback(() => {
-    setFormData(originalData);
+    setFormData(originalData); // Revert to original data on cancel
     setIsEditing(false);
     setIsSaving(false);
 
-    // Re-evaluate the local error for "no profile found"
-    // This ensures the message reappears if the profile is still not present
+    // After canceling, re-evaluate if client data exists or not
     if (!clienteData) {
       setLocalError(
         "Nessun profilo cliente trovato. Completa il modulo per crearne uno."
       );
     } else {
-      // If clienteData exists, clear any local error.
       setLocalError(null);
     }
-  }, [originalData, clienteData]); // Added clienteData to dependencies
+  }, [originalData, clienteData]);
 
   const combinedLoading = loading || isSaving;
 
-  if (loading && !userData) {
+  // Primary loading state: show loader if data is being initially fetched for user OR client
+  // This covers the initial fetch of both userData and clienteData.
+  if (loading && (!userData || !clienteData)) {
     return (
       <ProfileContainer>
         <Loader>Caricamento profilo...</Loader>
@@ -188,34 +249,20 @@ const ClientProfileSection = () => {
     );
   }
 
-  if (error && !userData) {
-    return (
-      <ProfileContainer>
-        <ErrorMessage>{error}</ErrorMessage>
-        <ProfileButton onClick={refetch}>Riprova</ProfileButton>
-      </ProfileContainer>
-    );
-  }
-
-  if (!formData.email && !loading) {
-    return (
-      <ProfileContainer>
-        <ErrorMessage>
-          Impossibile caricare i dati del profilo. Riprova.
-        </ErrorMessage>
-        <ProfileButton onClick={refetch}>Riprova</ProfileButton>
-      </ProfileContainer>
-    );
-  }
+  // --- Removed the problematic 'if (!formData.email && ...)' block from here ---
 
   return (
     <ProfileContainer>
       <ProfileSectionTitle>Dati Anagrafici Cliente</ProfileSectionTitle>
       <ProfileContentWrapper>
-        {(error || localError) && ( // Display either the global error or the local one
-          <ErrorMessage>{error || localError}</ErrorMessage>
+        {/* Display API error (delayed via showApiError) OR local validation/data-related errors (immediate) */}
+        {((showApiError && error) || localError) && (
+          <ErrorMessage>{(showApiError && error) || localError}</ErrorMessage>
         )}
-        {combinedLoading && !error && <Loader>Operazione in corso...</Loader>}
+        {/* Show generic loading spinner for ongoing operations, but hide if an error message is currently visible */}
+        {combinedLoading && !((showApiError && error) || localError) && (
+          <Loader>Operazione in corso...</Loader>
+        )}
 
         <FormSection>
           <FormGrid>
@@ -372,6 +419,12 @@ const ClientProfileSection = () => {
           </NewsletterToggleGroup>
         </ControlsSection>
       </ProfileContentWrapper>
+      {/* Display a "Riprova" button if an API error is shown */}
+      {showApiError && error && (
+        <ProfileButton onClick={refetch} style={{ marginTop: "10px" }}>
+          Riprova
+        </ProfileButton>
+      )}
     </ProfileContainer>
   );
 };

@@ -1,5 +1,9 @@
-import React, { useState } from "react";
+// src/components/CompleteProfile.js (or wherever your component is)
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../data/authContext"; // Re-import useAuth
+import useUserAndClienteData from "../data/useUserAndClienteData"; // Re-import the hook
+
 import {
   ProfileFormContainer,
   ProfileForm,
@@ -7,246 +11,271 @@ import {
   ProfileInput,
   ProfileButton,
   ProfileTitle,
-  ErrorMessage, // Import the new ErrorMessage component
-  Loader, // Import the new Loader component
-} from "../styles/StyledProfileComponents"; // Ensure these are imported from your styled components file
-import { STRAPI_BASE_URL } from "../data/api";
+  ErrorMessage,
+  Loader,
+} from "../styles/StyledProfileComponents";
 import { Pages } from "../data/constants";
 
 const CompleteProfile = () => {
-  const [userData, setUserData] = useState({
+  const navigate = useNavigate();
+  const { authToken } = useAuth(); // Get authToken from AuthContext
+
+  // Destructure all relevant states and functions from your hook
+  const {
+    userData: fetchedUserData, // Data about the authenticated user (including populated cliente)
+    clienteData, // Data about the associated client profile (directly from user.cliente)
+    loading: isHooksLoading, // Loading state from the hook's initial fetch
+    error: hooksError, // Error state from the hook's initial fetch
+    refetch: refetchClienteData, // Method to manually refetch data from the hook
+    updateClienteProfile, // Method to create/update client profile via the hook
+  } = useUserAndClienteData(); // This hook will fetch data on mount
+
+  // --- Form states ---
+  const [formData, setFormData] = useState({
     nome: "",
     cognome: "",
     data_nascita: "",
+    nazionalita: "",
     indirizzo: "",
     cap: "",
     citta: "",
     iscrizione_newsletter: false,
   });
 
-  const [error, setError] = useState(null); // New state for errors
-  const [loading, setLoading] = useState(false); // New state for loading
-  const [showReloadButton, setShowReloadButton] = useState(false); // New state for reload button
+  const [formError, setFormError] = useState(null); // Error specific to form submission
+  const [formLoading, setFormLoading] = useState(false); // Loading specific to form submission
+  const [showRetryButton, setShowRetryButton] = useState(false); // For form submission errors
 
-  const navigate = useNavigate();
-  const token = localStorage.getItem("jwt");
+  // === Effect to handle redirection if NOT AUTHENTICATED ===
+  // This remains immediate, as a user without a token should not see this page.
+  useEffect(() => {
+    if (!authToken) {
+      console.error("Auth token not found. Redirecting to login.");
+      navigate(Pages.LOGIN);
+    }
+  }, [authToken, navigate]);
 
-  // Check if the token is available
-  if (!token) {
-    console.error("Token not found. Please log in first.");
-    // Optionally redirect to login page if token is missing
-    // navigate('/login');
-    return null; // Or render a message indicating missing token
-  }
+  // === Effect to pre-fill form data when client data is loaded from the hook ===
+  useEffect(() => {
+    // Only pre-fill if data is loaded by the hook and clienteData is available
+    if (!isHooksLoading && clienteData && clienteData.attributes) {
+      setFormData({
+        nome: clienteData.attributes.nome || "",
+        cognome: clienteData.attributes.cognome || "",
+        data_nascita: clienteData.attributes.data_nascita || "",
+        nazionalita: clienteData.attributes.nazionalita || "",
+        indirizzo: clienteData.attributes.indirizzo || "",
+        cap: clienteData.attributes.cap || "",
+        citta: clienteData.attributes.citta || "",
+        iscrizione_newsletter:
+          clienteData.attributes.iscrizione_newsletter || false,
+      });
+    }
+  }, [isHooksLoading, clienteData]); // Depend on hook's loading state and clienteData
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setUserData((prevData) => ({
+    setFormData((prevData) => ({
       ...prevData,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  // Function to reset the form and error states
   const resetFormState = () => {
-    setError(null);
-    setLoading(false);
-    setShowReloadButton(false);
+    setFormError(null);
+    setFormLoading(false);
+    setShowRetryButton(false);
   };
 
+  // === handleSubmit: Session/User data validation primarily happens here before calling the hook's update ===
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setLoading(true); // Start loading
-    setError(null); // Clear previous errors
-    setShowReloadButton(false); // Hide reload button
+    setFormLoading(true); // Start local loading state for form submission
+    setFormError(null);
+    setShowRetryButton(false);
 
-    // AbortController for timeout
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 10000); // 10-second timeout
+    // --- Critical validation before making the API request via the hook ---
+    // These checks ensure the user has a valid session and their core user data is available
+    if (!authToken) {
+      setFormError(
+        "Sessione scaduta o non autenticata. Effettua nuovamente il login."
+      );
+      setFormLoading(false);
+      setShowRetryButton(true);
+      navigate(Pages.LOGIN); // Redirect immediately if token missing at submission time
+      return;
+    }
+
+    if (!fetchedUserData || !fetchedUserData.id) {
+      setFormError(
+        "Impossibile recuperare i dati del tuo utente. Ricarica la pagina o riprova ad effettuare il login."
+      );
+      setFormLoading(false);
+      setShowRetryButton(true);
+      // Optionally, you could call refetchClienteData() here to attempt a refresh
+      // refetchClienteData();
+      return;
+    }
+    // --- End of critical validation ---
 
     try {
-      if (!token) {
-        throw new Error("Authentication token not found.");
-      }
+      // Use the hook's updateClienteProfile method.
+      // The hook internally handles the logic of POST vs PUT based on clienteDocumentId it holds,
+      // and links the new client to userData.id if creating.
+      const clientePayload = {
+        ...formData,
+        // Ensure cap is parsed to integer if it's not empty, otherwise null or undefined
+        cap: formData.cap !== "" ? parseInt(formData.cap, 10) : null,
+      };
 
-      // 1. Fetch user ID
-      const meRes = await fetch(`${STRAPI_BASE_URL}/users/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        signal: controller.signal, // Apply timeout to this fetch
-      });
+      const result = await updateClienteProfile(clientePayload);
 
-      // Check if the first fetch was successful
-      if (!meRes.ok) {
-        const errorData = await meRes.json();
-        console.error("Error fetching user ID:", errorData);
-        setError(
-          `Errore nel recupero ID utente: ${
-            errorData.error?.message || meRes.statusText
-          }`
+      if (result.success) {
+        console.log(
+          "Profilo cliente creato/aggiornato con successo:",
+          result.data
         );
-        setShowReloadButton(true);
-        throw new Error(`HTTP error fetching user ID! status: ${meRes.status}`);
-      }
-      const meData = await meRes.json();
-
-      if (!meData?.id) {
-        setError("ID utente non trovato dopo il recupero.");
-        setShowReloadButton(true);
-        throw new Error("User ID not found");
-      }
-      const userId = meData.id;
-
-      // 2. Update the user data
-      const response = await fetch(`${STRAPI_BASE_URL}/users/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(userData),
-        signal: controller.signal, // Apply timeout to this fetch as well
-      });
-
-      const updatedUserData = await response.json();
-
-      if (response.ok) {
-        console.log("User data updated successfully:", updatedUserData);
-        navigate(Pages.CLIENT_DASHBOARD); // Redirect to the client dashboard after successful update
+        navigate(Pages.CLIENT_DASHBOARD); // Redirect to the client dashboard
       } else {
-        // Handle specific API errors from Strapi
-        const errorDetail =
-          updatedUserData.error?.message ||
-          updatedUserData.message ||
-          `Status: ${response.status}`;
-        console.error("Error updating user data:", updatedUserData);
-        setError(`Errore durante l'aggiornamento: ${errorDetail}`);
-        setShowReloadButton(true);
-        throw new Error(
-          `HTTP error updating user data! status: ${response.status}`
+        console.error(
+          "Errore durante l'aggiornamento del profilo:",
+          result.error
         );
-      }
-    } catch (error) {
-      if (error.name === "AbortError") {
-        setError(
-          "Il server non ha risposto in tempo. Controlla la tua connessione o riprova."
+        setFormError(
+          `Errore durante l'aggiornamento del profilo: ${result.error}`
         );
-        setShowReloadButton(true);
-      } else {
-        console.error("Error during user data update:", error);
-        // Only set a generic error if a specific one wasn't set earlier
-        if (!error) {
-          // If error wasn't set by specific HTTP checks
-          setError(
-            "Si è verificato un errore inaspettato durante l'aggiornamento. Riprova."
-          );
-          setShowReloadButton(true);
-        }
+        setShowRetryButton(true);
       }
+    } catch (err) {
+      console.error("An unexpected error occurred during submit:", err);
+      setFormError(
+        `Si è verificato un errore inaspettato durante l'aggiornamento. Riprova.`
+      );
+      setShowRetryButton(true);
     } finally {
-      setLoading(false); // Stop loading regardless of outcome
-      clearTimeout(id); // Ensure timeout is cleared
+      setFormLoading(false); // Stop local loading state regardless of success/failure
     }
   };
+
+  // --- Render logic ---
+  // The form is always rendered (after the initial authToken check).
+  // Visual feedback for loading and errors from the hook's initial fetch is displayed.
+  const isFormDisabled =
+    formLoading || showRetryButton || isHooksLoading || !!hooksError;
 
   return (
     <ProfileFormContainer>
       <ProfileTitle>
         Completa la registrazione, inserisci i tuoi dati.
       </ProfileTitle>
+
+      {/* Display loader if the hook is still fetching initial data */}
+      {isHooksLoading && <Loader>Caricamento dati profilo...</Loader>}
+
+      {/* Display error from hook's initial fetch, only if not loading */}
+      {hooksError && !isHooksLoading && (
+        <>
+          <ErrorMessage>
+            Errore nel caricamento iniziale del profilo:{" "}
+            {hooksError.message || "Errore sconosciuto"}.
+          </ErrorMessage>
+          <ProfileButton type="button" onClick={refetchClienteData}>
+            Riprova Caricamento Dati
+          </ProfileButton>
+        </>
+      )}
+
+      {/* Main form, potentially disabled based on loading/error states */}
       <ProfileForm onSubmit={handleSubmit}>
-        {/* Error message display */}
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-
-        {/* Loading indicator */}
-        {loading && <Loader>Aggiornamento profilo...</Loader>}
-
-        {/* Reload/Reset button */}
-        {showReloadButton && (
+        {formError && <ErrorMessage>{formError}</ErrorMessage>}{" "}
+        {formLoading && <Loader>Aggiornamento profilo...</Loader>}{" "}
+        {showRetryButton && (
           <ProfileButton type="button" onClick={resetFormState}>
             Riprova
           </ProfileButton>
         )}
-
         <ProfileLabel>Nome</ProfileLabel>
         <ProfileInput
           type="text"
           name="nome"
           placeholder="Nome"
-          value={userData.nome}
+          value={formData.nome}
           onChange={handleChange}
           required
-          disabled={loading || showReloadButton} // Disable when loading or showing reload
+          disabled={isFormDisabled}
         />
         <ProfileLabel>Cognome</ProfileLabel>
         <ProfileInput
           type="text"
           name="cognome"
           placeholder="Cognome"
-          value={userData.cognome}
+          value={formData.cognome}
           onChange={handleChange}
           required
-          disabled={loading || showReloadButton}
+          disabled={isFormDisabled}
         />
-
         <ProfileLabel>Data di nascita</ProfileLabel>
         <ProfileInput
           type="date"
           name="data_nascita"
           placeholder="Data di Nascita"
-          value={userData.data_nascita}
+          value={formData.data_nascita}
           onChange={handleChange}
           required
-          disabled={loading || showReloadButton}
+          disabled={isFormDisabled}
         />
-
+        <ProfileLabel>Nazionalità</ProfileLabel>
+        <ProfileInput
+          type="text"
+          name="nazionalita"
+          placeholder="Nazionalità"
+          value={formData.nazionalita}
+          onChange={handleChange}
+          required
+          disabled={isFormDisabled}
+        />
         <ProfileLabel>Indirizzo</ProfileLabel>
         <ProfileInput
           type="text"
           name="indirizzo"
           placeholder="Indirizzo"
-          value={userData.indirizzo}
+          value={formData.indirizzo}
           onChange={handleChange}
           required
-          disabled={loading || showReloadButton}
+          disabled={isFormDisabled}
         />
-
         <ProfileLabel>CAP</ProfileLabel>
         <ProfileInput
           type="text"
           name="cap"
           placeholder="CAP"
-          value={userData.cap}
+          value={formData.cap}
           onChange={handleChange}
           required
-          disabled={loading || showReloadButton}
+          disabled={isFormDisabled}
         />
-
         <ProfileLabel>Città</ProfileLabel>
         <ProfileInput
           type="text"
           name="citta"
           placeholder="Città"
-          value={userData.citta}
+          value={formData.citta}
           onChange={handleChange}
           required
-          disabled={loading || showReloadButton}
+          disabled={isFormDisabled}
         />
-
         <ProfileLabel>
           <input
             type="checkbox"
             name="iscrizione_newsletter"
-            checked={userData.iscrizione_newsletter}
+            checked={formData.iscrizione_newsletter}
             onChange={handleChange}
-            disabled={loading || showReloadButton}
+            disabled={isFormDisabled}
           />
           Ricevi notizie via email
         </ProfileLabel>
-
-        <ProfileButton type="submit" disabled={loading || showReloadButton}>
+        <ProfileButton type="submit" disabled={isFormDisabled}>
           Completa Profilo
         </ProfileButton>
       </ProfileForm>

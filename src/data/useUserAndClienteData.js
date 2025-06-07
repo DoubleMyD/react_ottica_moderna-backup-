@@ -1,13 +1,21 @@
 // src/hooks/useUserAndClienteData.js
-import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "./authContext";
-import { STRAPI_BASE_URL } from "./api";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useAuth } from "../data/authContext"; // Adjusted path assuming it's in data/
+import { STRAPI_BASE_URL } from "../data/api"; // Adjusted path assuming it's in data/
 
 const useUserAndClienteData = () => {
-  const { authToken } = useAuth();
-  const [userData, setUserData] = useState(null); // Raw Strapi User data
-  const [clienteData, setClienteData] = useState(null); // Raw Strapi Cliente data (with id and attributes)
-  const [clienteId, setClienteId] = useState(null); // ID of the Cliente entry
+  const { authToken, logout } = useAuth(); // Destructure logout if your authContext provides it
+
+  // Use a ref to always hold the latest authToken value to avoid it being a useEffect dependency
+  const authTokenRef = useRef(authToken);
+  useEffect(() => {
+    authTokenRef.current = authToken; // Update the ref whenever authToken changes
+  }, [authToken]);
+
+  const [userData, setUserData] = useState(null);
+  const [clienteData, setClienteData] = useState(null);
+  // clienteDocumentId will be used for PUT/DELETE requests in Strapi 5
+  const [clienteDocumentId, setClienteDocumentId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -15,9 +23,15 @@ const useUserAndClienteData = () => {
     setLoading(true);
     setError(null);
 
-    if (!authToken) {
+    const currentAuthToken = authTokenRef.current;
+
+    if (!currentAuthToken) {
       setError("Autenticazione necessaria per visualizzare il profilo.");
       setLoading(false);
+      // It's good practice to log out and redirect if no token is found here.
+      // This hook should ideally not handle navigation directly to keep it focused on data.
+      // The component using this hook can decide to navigate if error is present.
+      // logout(); // Call logout here if appropriate based on your authContext
       return;
     }
 
@@ -25,48 +39,44 @@ const useUserAndClienteData = () => {
     const id = setTimeout(() => controller.abort(), 10000); // 10-second timeout
 
     try {
-      // 1. Fetch authenticated user's basic data
-      const userRes = await fetch(`${STRAPI_BASE_URL}/users/me`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-        signal: controller.signal,
-      });
-
-      if (!userRes.ok) {
-        throw new Error(
-          `HTTP error fetching user data! status: ${userRes.status}`
-        );
-      }
-      const fetchedUserData = await userRes.json();
-      setUserData(fetchedUserData);
-
-      // 2. Fetch Cliente profile linked to this user ID
-      const clienteRes = await fetch(
-        `${STRAPI_BASE_URL}/clientes?filters[user][id][$eq]=${fetchedUserData.id}&populate=user`,
+      // 1. Fetch authenticated user's data and populate the 'cliente' relation
+      // Assumes your user model has a relation field named 'cliente' pointing to the Cliente collection.
+      const userRes = await fetch(
+        `${STRAPI_BASE_URL}/users/me?populate=cliente`,
         {
           headers: {
-            Authorization: `Bearer ${authToken}`,
+            Authorization: `Bearer ${currentAuthToken}`,
           },
           signal: controller.signal,
         }
       );
 
-      if (!clienteRes.ok) {
+      if (!userRes.ok) {
+        if (userRes.status === 401 || userRes.status === 403) {
+          // If token is invalid/expired, log out
+          if (logout) logout(); // Safely call logout if it exists
+          throw new Error(
+            "Sessione scaduta o non autorizzata. Effettua il login."
+          );
+        }
+        const errorData = await userRes.json();
         throw new Error(
-          `HTTP error fetching client profile! status: ${clienteRes.status}`
+          errorData.error?.message ||
+            `Errore fetching user data! Status: ${userRes.status}`
         );
       }
 
-      const clienteResponse = await clienteRes.json();
-      const fetchedClienteEntry = clienteResponse.data[0]; // Assuming only one Cliente entry per user
+      const fetchedUser = await userRes.json();
+      setUserData(fetchedUser);
 
-      if (fetchedClienteEntry) {
-        setClienteId(fetchedClienteEntry.id);
-        setClienteData(fetchedClienteEntry);
+      // Now, directly access the populated cliente data from the fetched user object
+      if (fetchedUser.cliente) {
+        // In Strapi 5, use documentId for updates/deletes via direct path
+        setClienteDocumentId(fetchedUser.cliente.documentId);
+        setClienteData(fetchedUser.cliente); // This is the full populated cliente object
       } else {
-        setClienteId(null);
-        setClienteData(null); // Explicitly null if not found
+        setClienteDocumentId(null);
+        setClienteData(null); // No associated cliente profile found
       }
     } catch (err) {
       if (err.name === "AbortError") {
@@ -79,18 +89,21 @@ const useUserAndClienteData = () => {
       setLoading(false);
       clearTimeout(id);
     }
-  }, [authToken]);
+  }, [logout]); // Added logout to dependencies if it's available
 
   useEffect(() => {
     fetchUserAndCliente();
-  }, [fetchUserAndCliente]); // Dependency array ensures it runs when fetchUserAndCliente changes
+  }, [fetchUserAndCliente]);
 
   const updateClienteProfile = useCallback(
     async (updates) => {
       setLoading(true);
       setError(null);
 
-      if (!authToken || !userData?.id) {
+      const currentAuthToken = authTokenRef.current;
+
+      // Ensure we have a token and user ID before attempting update/create
+      if (!currentAuthToken || !userData?.id) {
         setError(
           "Autenticazione o ID utente non disponibile. Impossibile aggiornare."
         );
@@ -105,30 +118,38 @@ const useUserAndClienteData = () => {
         let response;
         let method;
         let url;
-        let dataToSend = updates; // The updates object is already prepared by the calling component
+        let dataToSend = updates; // The form data provided
 
-        if (clienteId) {
-          // Existing Cliente profile
+        // --- Crucial Change Here: Use clienteDocumentId for PUT requests ---
+        if (clienteDocumentId) {
+          // If a cliente profile already exists, update it using documentId
           method = "PUT";
-          url = `${STRAPI_BASE_URL}/clientes/${clienteId}`;
+          url = `${STRAPI_BASE_URL}/clientes/${clienteDocumentId}`; // Use documentId here!
         } else {
-          // New Cliente profile
+          // If no cliente profile exists, create a new one and link it to the user
           method = "POST";
           url = `${STRAPI_BASE_URL}/clientes`;
-          dataToSend = { ...updates, user: userData.id }; // Link to user on creation
+          // Link the new cliente entry to the current user's ID
+          dataToSend = { ...updates, user: userData.id };
         }
 
         response = await fetch(url, {
           method: method,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
+            Authorization: `Bearer ${currentAuthToken}`,
           },
-          body: JSON.stringify({ data: dataToSend }), // Strapi v4 requires { data: ... }
+          body: JSON.stringify({ data: dataToSend }), // Strapi v4/v5 requires { data: ... }
           signal: controller.signal,
         });
 
         if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            if (logout) logout(); // Safely call logout if it exists
+            throw new Error(
+              "Sessione scaduta o non autorizzata. Effettua il login."
+            );
+          }
           const errorData = await response.json();
           console.error("Failed to update/create client profile:", errorData);
           throw new Error(
@@ -139,8 +160,8 @@ const useUserAndClienteData = () => {
         const responseData = await response.json();
         const updatedClienteEntry = responseData.data;
 
-        // Update the internal state with the new data
-        setClienteId(updatedClienteEntry.id);
+        // After successful update/creation, update the state with the new/updated cliente data
+        setClienteDocumentId(updatedClienteEntry.documentId); // Store the documentId
         setClienteData(updatedClienteEntry);
 
         return { success: true, data: updatedClienteEntry };
@@ -157,8 +178,8 @@ const useUserAndClienteData = () => {
         clearTimeout(id);
       }
     },
-    [authToken, userData, clienteId]
-  ); // Dependencies for useCallback
+    [userData, clienteDocumentId, logout] // userData, clienteDocumentId, and logout are dependencies
+  );
 
   return {
     userData,
@@ -166,7 +187,7 @@ const useUserAndClienteData = () => {
     loading,
     error,
     updateClienteProfile,
-    refetch: fetchUserAndCliente, // Provide a way to manually refetch
+    refetch: fetchUserAndCliente, // Expose refetch for external use
   };
 };
 

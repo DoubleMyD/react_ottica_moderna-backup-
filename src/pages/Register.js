@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAuth } from "../data/authContext";
 import {
   RegisterContainer,
   RegisterForm,
@@ -12,7 +13,7 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import { STRAPI_BASE_URL } from "../data/api"; 
-import { Pages } from "../data/constants";
+import { Pages, Role } from "../data/constants";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -26,6 +27,7 @@ const Register = () => {
   const [showReloadButton, setShowReloadButton] = useState(false); // New state for reload button
 
   const navigate = useNavigate();
+  const { login } = useAuth(); // Assuming you have a useAuth hook for authentication
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -88,7 +90,8 @@ const Register = () => {
       }
 
       const data = await response.json();
-      localStorage.setItem("jwt", data.jwt); // Store JWT in local storage
+
+      login(data.jwt, Role.CLIENT); // Assuming login function takes JWT and role
 
       console.log("Registration successful:", data);
       navigate(Pages.COMPLETE_PROFILE); // Redirect to complete profile page
