@@ -1,3 +1,4 @@
+// src/components/Expander/Expander.js
 import React, { useState } from "react";
 import {
   ExpanderContainer,
@@ -22,7 +23,8 @@ const Expander = ({ label, children }) => {
           {isOpen ? "▼" : "▶"}
         </ExpanderArrow>
       </ExpanderHeader>
-      <ExpanderContent isOpen={isOpen}>{children}</ExpanderContent>
+      {/* Pass $isOpen here instead of isOpen */}
+      <ExpanderContent $isOpen={isOpen}>{children}</ExpanderContent>
     </ExpanderContainer>
   );
 };

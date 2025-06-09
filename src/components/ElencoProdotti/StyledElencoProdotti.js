@@ -1,3 +1,4 @@
+// src/components/ElencoProdotti/StyledElencoProdotti.js
 import styled from "styled-components";
 
 export const ProductListContainer = styled.div`
@@ -19,21 +20,37 @@ export const ProductCard = styled.div`
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  position: relative; /* Necessario per il posizionamento assoluto di prezzo e brand */
+  position: relative;
+  cursor: pointer; /* Add cursor pointer to indicate clickable */
 `;
 
-export const ProductImagePlaceholder = styled.div`
-  background-color: #f0f0f0;
-  aspect-ratio: 1 / 1; /* Mantiene le proporzioni quadrate */
+export const ProductImage = styled.img`
+  width: 100%;
+  height: auto; /* Maintain aspect ratio */
+  aspect-ratio: 1 / 1; /* Keep square proportions if desired */
+  object-fit: cover; /* Cover the area, cropping if necessary */
+  background-color: #f0f0f0; /* Fallback background for missing images */
+`;
+
+// NEW: ProductInfo styled component
+export const ProductInfo = styled.div`
+  padding: 10px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  font-size: 14px;
-  color: #777;
+  text-align: center;
+  flex-grow: 1; // Allows product info to take available space
+`;
+
+export const ProductName = styled.h3`
+  font-size: 16px;
+  margin: 0 0 5px 0; /* Adjust margins as needed */
+  color: #333;
+  text-align: center;
 `;
 
 export const ProductBrand = styled.span`
-  position: absolute;
+  position: absolute; /* Keep it positioned relative to ProductCard */
   top: 10px;
   left: 10px;
   background-color: rgba(255, 255, 255, 0.8);
@@ -42,11 +59,11 @@ export const ProductBrand = styled.span`
   font-size: 12px;
   font-weight: bold;
   color: #333;
-  z-index: 1; /* Assicura che sia sopra l'immagine */
+  z-index: 1;
 `;
 
 export const ProductPrice = styled.span`
-  position: absolute;
+  position: absolute; /* Keep it positioned relative to ProductCard */
   top: 10px;
   right: 10px;
   background-color: rgba(255, 255, 255, 0.8);
@@ -55,14 +72,15 @@ export const ProductPrice = styled.span`
   font-size: 14px;
   font-weight: bold;
   color: #007bff;
-  z-index: 1; /* Assicura che sia sopra l'immagine */
+  z-index: 1;
 `;
 
 export const ProductAction = styled.div`
   padding: 10px;
   display: flex;
   justify-content: center;
-  align-items: center; /* Manteniamo l'allineamento verticale al centro */
+  align-items: center;
+  margin-top: auto; /* Pushes the action button to the bottom */
 `;
 
 export const ViewButton = styled.button`
@@ -79,3 +97,16 @@ export const ViewButton = styled.button`
     background-color: #0056b3;
   }
 `;
+
+// Make sure ProductPlaceholderImage is commented out if you're not using it
+/*
+export const ProductImagePlaceholder = styled.div`
+  background-color: #f0f0f0;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  color: #777;
+`;
+*/

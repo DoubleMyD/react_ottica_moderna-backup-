@@ -1,6 +1,6 @@
 // src/components/ClientProfileSection/ClientProfileSection.jsx
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import useUserAndClienteData from "../../data/useUserAndClienteData";
+import { useState, useEffect, useCallback, useRef } from "react";
+import useUserAndClienteData from "../../hooks/useUserAndClienteData";
 import {
   ProfileContainer,
   ProfileSectionTitle,

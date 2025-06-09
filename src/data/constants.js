@@ -9,7 +9,6 @@ export const Pages = {
     LOGIN: "/login",
     ADMIN: "/admin",
     CATALOG: "/catalogo",
-    CATALOG_PRODUCT: "/catalogo/:productId",
     REGISTER: "/register",
     COMPLETE_PROFILE: "/completa-profilo",
     CONTACT: "/contatti",

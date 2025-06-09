@@ -1,7 +1,7 @@
 // src/hooks/useUserAndClienteData.js
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "../data/authContext"; // Adjusted path assuming it's in data/
-import { STRAPI_BASE_URL } from "../data/api"; // Adjusted path assuming it's in data/
+import { useAuth } from "../hooks/authContext"; // Adjusted path assuming it's in data/
+import { STRAPI_BASE_API_URL } from "../data/api"; // Adjusted path assuming it's in data/
 
 const useUserAndClienteData = () => {
   const { authToken, logout } = useAuth(); // Destructure logout if your authContext provides it
@@ -42,7 +42,7 @@ const useUserAndClienteData = () => {
       // 1. Fetch authenticated user's data and populate the 'cliente' relation
       // Assumes your user model has a relation field named 'cliente' pointing to the Cliente collection.
       const userRes = await fetch(
-        `${STRAPI_BASE_URL}/users/me?populate=cliente`,
+        `${STRAPI_BASE_API_URL}/users/me?populate=cliente`,
         {
           headers: {
             Authorization: `Bearer ${currentAuthToken}`,
@@ -124,11 +124,11 @@ const useUserAndClienteData = () => {
         if (clienteDocumentId) {
           // If a cliente profile already exists, update it using documentId
           method = "PUT";
-          url = `${STRAPI_BASE_URL}/clientes/${clienteDocumentId}`; // Use documentId here!
+          url = `${STRAPI_BASE_API_URL}/clientes/${clienteDocumentId}`; // Use documentId here!
         } else {
           // If no cliente profile exists, create a new one and link it to the user
           method = "POST";
-          url = `${STRAPI_BASE_URL}/clientes`;
+          url = `${STRAPI_BASE_API_URL}/clientes`;
           // Link the new cliente entry to the current user's ID
           dataToSend = { ...updates, user: userData.id };
         }

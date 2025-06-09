@@ -1,11 +1,11 @@
 // src/components/ClientDashboard/ClientDashboard.jsx
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../data/authContext";
+import { useAuth } from "../hooks/authContext";
 import { Pages } from "../data/constants";
 
 import ClientProfileSection from "../components/ClientProfile/ClientProfileSection";
-import PurchaseHistorySection from "../components/ClientPurchase/ClientPurchase"; // <--- Import new section
+import PurchaseHistorySection from "../components/ClientPurchase/PurchaseHistorySection"; // <--- Import new section
 
 import {
   DashboardLayout,

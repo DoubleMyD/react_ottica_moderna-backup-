@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "../data/authContext";
+import { useAuth } from "../hooks/authContext";
 import {
   RegisterContainer,
   RegisterForm,
@@ -12,7 +12,7 @@ import {
 } from "../styles/StyledRegisterComponents";
 
 import { useNavigate } from "react-router-dom";
-import { STRAPI_BASE_URL } from "../data/api"; 
+import { STRAPI_BASE_API_URL } from "../data/api"; 
 import { Pages, Role } from "../data/constants";
 
 const Register = () => {
@@ -54,7 +54,7 @@ const Register = () => {
     const id = setTimeout(() => controller.abort(), 10000); // Set timeout for 10 seconds
 
     try {
-      const response = await fetch(`${STRAPI_BASE_URL}/auth/local/register`, {
+      const response = await fetch(`${STRAPI_BASE_API_URL}/auth/local/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

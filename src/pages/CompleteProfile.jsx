@@ -1,8 +1,8 @@
 // src/components/CompleteProfile.js (or wherever your component is)
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../data/authContext"; // Re-import useAuth
-import useUserAndClienteData from "../data/useUserAndClienteData"; // Re-import the hook
+import { useAuth } from "../hooks/authContext"; // Re-import useAuth
+import useUserAndClienteData from "../hooks/useUserAndClienteData"; // Re-import the hook
 
 import {
   ProfileFormContainer,

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom"; // Keep Link for other buttons
-import { useAuth } from "../../data/authContext"; // Assuming these are needed
-import { STRAPI_BASE_URL } from "../../data/api"; // Assuming these are needed
+import { useAuth } from "../../hooks/authContext"; // Assuming these are needed
+import { STRAPI_BASE_API_URL } from "../../data/api"; // Assuming these are needed
 import { Pages } from "../../data/constants";
 
 import {

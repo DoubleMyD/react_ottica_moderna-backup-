@@ -3,7 +3,7 @@ import {
   Routes, //define all the possible routes in the application
   Route, //define single route and corresponding pages
 } from "react-router-dom"; //handle the navigation in the application
-import { AuthProvider } from "./data/authContext";
+import { AuthProvider } from "./hooks/authContext";
 import { Pages } from "./data/constants";
 
 import MainLayout from "./components/MainLayout/MainLayout"; // Main layout that includes TopBar and Footer
@@ -48,7 +48,7 @@ function App() {
                 element={<ClientDashboard />}
               />
               <Route
-                path={Pages.CATALOG_PRODUCT}
+                path={Pages.CATALOG + "/:documentId"}
                 element={<ProductDetailPage />}
               />
             </Route>

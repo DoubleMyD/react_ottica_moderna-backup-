@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../data/authContext";
-import { STRAPI_BASE_URL } from "../data/api";
+import { useAuth } from "../hooks/authContext";
+import { STRAPI_BASE_API_URL } from "../data/api";
 import {
   ErrorMessage,
   Loader,
@@ -56,7 +56,7 @@ const LoginPage = () => {
 
     try {
       // Step 1: Authenticate user credentials
-      const response = await fetch(`${STRAPI_BASE_URL}/auth/local`, {
+      const response = await fetch(`${STRAPI_BASE_API_URL}/auth/local`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -81,7 +81,7 @@ const LoginPage = () => {
 
       // Step 2: Fetch detailed user data (including role)
       const userResponse = await fetch(
-        `${STRAPI_BASE_URL}/users/${authData.user.id}?populate=role`,
+        `${STRAPI_BASE_API_URL}/users/${authData.user.id}?populate=role`,
         {
           method: "GET",
           headers: {
@@ -105,7 +105,7 @@ const LoginPage = () => {
       if (userData.role.name === Role.CLIENT) {
         try {
           const clienteResponse = await fetch(
-            `${STRAPI_BASE_URL}/clientes?filters[user][id][$eq]=${userData.id}`,
+            `${STRAPI_BASE_API_URL}/clientes?filters[user][id][$eq]=${userData.id}`,
             {
               method: "GET",
               headers: {

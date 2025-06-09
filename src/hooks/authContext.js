@@ -4,7 +4,7 @@ import {
     useContext,
     useEffect 
 } from "react";
-import { Role } from "./constants";
+import { Role } from "../data/constants";
 
 const AuthContext = createContext(); //create a global context for the authentication that can be used in all the application
 

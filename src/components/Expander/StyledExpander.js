@@ -1,3 +1,4 @@
+// src/components/Expander/StyledExpander.js
 import styled from "styled-components";
 
 export const ExpanderContainer = styled.div`
@@ -33,7 +34,8 @@ export const ExpanderArrow = styled.span`
 export const ExpanderContent = styled.div`
   margin-top: 10px;
   overflow: hidden; /* Importante per l'animazione di altezza */
+  /* Use $isOpen here instead of isOpen */
   max-height: ${(props) =>
-    props.isOpen ? "500px" : "0"}; /* Altezza massima quando aperto */
+    props.$isOpen ? "500px" : "0"}; /* Altezza massima quando aperto */
   transition: max-height 0.3s ease-in-out;
 `;

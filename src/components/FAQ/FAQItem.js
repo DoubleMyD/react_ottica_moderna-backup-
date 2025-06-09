@@ -10,7 +10,7 @@ import {
 
 const FAQItem = ({ faq, index }) => {
   // Combine the number and question into a single label string
-  const combinedLabel = `${index + 1}. ${faq.question}`;
+  const combinedLabel = `${index + 1}. ${faq.domanda}`;
 
   return (
     <FAQItemWrapper>
@@ -18,7 +18,7 @@ const FAQItem = ({ faq, index }) => {
       <Expander label={<FAQQuestionLabel>{combinedLabel}</FAQQuestionLabel>}>
         {/* Children of Expander become the collapsible content */}
         <FAQAnswerContent>
-          <p>{faq.answer}</p>
+          <p>{faq.risposta}</p>
         </FAQAnswerContent>
       </Expander>
     </FAQItemWrapper>
