@@ -21,4 +21,39 @@ body {
     border-bottom: 1px solid #ddd;
     padding: 10px 0;
   }
+
+    /* Add this to a relevant stylesheet, e.g., StyledAdminDashboard.js or a global CSS file */
+    .highlight-row {
+      transition: background-color 0.5s ease-in-out;
+      background-color: #e0f7fa;
+      /* Light cyan */
+      border: 2px solid #00bcd4;
+      /* A brighter border */
+    }
+  
+    /* You might want to briefly flash a different color on initial highlight */
+    .highlight-row.initial-highlight {
+      animation: flashHighlight 1.5s ease-out forwards;
+    }
+  
+    @keyframes flashHighlight {
+      0% {
+        background-color: #e0f7fa;
+      }
+  
+      50% {
+        background-color: #a7d9f7;
+        /* A slightly darker blue */
+      }
+  
+      100% {
+        background-color: #e0f7fa;
+      }
+    }
+  
+    /* Ensure the background transition works when the class is removed */
+    .client-types-table-row {
+      /* Or whatever your base row class is */
+      transition: background-color 0.5s ease-in-out;
+    }
   

@@ -65,10 +65,38 @@ export const HeaderDetail = styled.div`
     font-size: 0.9rem;
   }
 `;
-
 export const ProductTableWrapper = styled.div`
   overflow-x: auto; /* Enable horizontal scroll for tables on small screens */
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+
+  /* --- Scrollbar Styles --- */
+
+  /* Webkit-specific scrollbar styling */
+  &::-webkit-scrollbar {
+    height: 8px; /* Height of the horizontal scrollbar */
+    width: 8px; /* Width of the vertical scrollbar (though we're primarily targeting horizontal here) */
+  }
+
+  &::-webkit-scrollbar-track {
+    background: ${Colors.lightGreyBackground}; /* Color of the track */
+    border-radius: 10px; /* Rounded corners for the track */
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: ${Colors.primaryBlue}; /* Color of the scroll thumb */
+    border-radius: 10px; /* Rounded corners for the thumb */
+    border: 2px solid ${Colors.lightGreyBackground}; /* Creates a slight padding/gap */
+  }
+
+  /* Handle on hover */
+  &::-webkit-scrollbar-thumb:hover {
+    background: ${Colors.darkBlue}; /* Darker blue on hover */
+  }
+
+  /* Optional: Make the corners transparent if needed */
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
 `;
 
 export const ProductTable = styled.table`

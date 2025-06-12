@@ -12,8 +12,9 @@ import {
   ProfileButton,
 } from "../../styles/StyledProfileComponents"; // Assuming these are common UI components
 
-const PurchaseHistorySection = () => {
-  const { purchases, loading, error, refetchPurchases } = usePurchaseHistory();
+const PurchaseHistorySection = ({clientId}) => {
+  const { purchases, loading, error, refetchPurchases } =
+    usePurchaseHistory(clientId);
 
   if (loading) {
     return (

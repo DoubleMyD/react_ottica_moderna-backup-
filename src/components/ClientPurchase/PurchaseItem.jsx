@@ -1,7 +1,7 @@
 // src/components/PurchaseHistorySection/PurchaseItem.jsx
 import React from "react";
 import { Pages } from "../../data/constants"; // For linking to product pages
-import { STRAPI_BASE_API_URL } from "../../data/api"; // Base URL for Strapi images
+import { STRAPI_BASE_URL } from "../../data/api"; // Base URL for Strapi images
 
 import {
   PurchaseItemContainer,
@@ -31,8 +31,8 @@ const PurchaseItem = ({ purchase }) => {
     }).format(amount);
   };
 
-  const formattedDate = purchaseAttrs.data
-    ? new Date(purchaseAttrs.data).toLocaleDateString("it-IT", {
+  const formattedDate = purchaseAttrs.data_acquisto
+    ? new Date(purchaseAttrs.data_acquisto).toLocaleDateString("it-IT", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -40,8 +40,6 @@ const PurchaseItem = ({ purchase }) => {
     : "N.D.";
 
   const dettaglioAcquistos = purchaseAttrs.dettaglio_acquistos || [];
-  console.log("Dettaglio Acquistos (inside PurchaseItem):", dettaglioAcquistos);
-  console.log("Purchase Data (inside PurchaseItem):", purchaseAttrs);
 
   return (
     <PurchaseItemContainer>
@@ -54,7 +52,7 @@ const PurchaseItem = ({ purchase }) => {
         </HeaderDetail>
         <HeaderDetail>
           Totale Pagato:{" "}
-          <span>{formatCurrency(purchaseAttrs.prezzo_totale)}</span>
+          <span>{formatCurrency(purchaseAttrs.importo_totale)}</span>
         </HeaderDetail>
       </PurchaseHeader>
       <ProductTableWrapper>
@@ -72,7 +70,7 @@ const PurchaseItem = ({ purchase }) => {
             {dettaglioAcquistos.map((detailItem) => {
               const product = detailItem.prodotto;
               const productImage = product?.immagine?.url
-                ? `${STRAPI_BASE_API_URL}${product.immagine.url}`
+                ? `${STRAPI_BASE_URL}${product.immagine.url}`
                 : "/path/to/default-image.png";
 
               // !! IMPORTANT CHANGE HERE !!

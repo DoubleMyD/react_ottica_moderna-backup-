@@ -3,11 +3,13 @@ import React from "react";
 import FAQItem from "../FAQ/FAQItem";
 import { FAQListContainer } from "../FAQ/StyledFAQ"; 
 
-const FAQList = ({ faqs }) => {
-  console.log(faqs);
+const FAQList = ({ faqs, showTitle = true }) => {
+  console.log(faqs, showTitle);
+  
   return (
     <FAQListContainer>
-      <h2>Domande Frequenti (FAQ)</h2>
+      {showTitle && <h2>Domande Frequenti (FAQ)</h2>}
+
       {faqs.map((faq, index) => (
         
         <FAQItem key={faq.id} faq={faq} index={index} />

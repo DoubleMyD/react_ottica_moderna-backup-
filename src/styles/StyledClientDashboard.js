@@ -4,7 +4,7 @@ import { Colors } from "../styles/colors";
 
 export const DashboardLayout = styled.div`
   display: flex;
-  min-height: calc(100vh - 8vh); /* Full viewport height minus TopBar height */
+  min-height: calc(92vh - 8vh ); /* Full viewport height minus TopBar height */
   background-color: ${Colors.lightBackground}; /* Light background for the dashboard */
   font-family: "Arial", sans-serif;
 

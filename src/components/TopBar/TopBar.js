@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Keep Link for other buttons
-import { useAuth } from "../../hooks/authContext"; // Assuming these are needed
-import { STRAPI_BASE_API_URL } from "../../data/api"; // Assuming these are needed
-import { Pages } from "../../data/constants";
+// src/components/TopBar/TopBar.jsx
+import { useContext, useState } from "react"; // Keep original imports if needed by other logic
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/authContext";
+import { STRAPI_BASE_API_URL } from "../../data/api";
+import { Pages, Role } from "../../data/constants";
 
 import {
   PrimaryButton,
@@ -10,39 +11,64 @@ import {
   TopBarContainer,
   TitleContainer,
   LogoImage,
+  NavButtonsContainer, // NEW: Import the new container
 } from "../TopBar/TopBarStyledComponent.js";
 
 const TopBar = () => {
-
+  const { isAuthenticated, role, logout } = useAuth(); // Assuming logout is available from useAuth
   const navigate = useNavigate();
-  // const { user, logout } = useAuth(); // Assuming you'll use authentication state later
+
+  let homePageUrl = "/"; // Default for non-authenticated
+  if (isAuthenticated) {
+    if (role === Role.ADMIN) homePageUrl = Pages.ADMIN;
+    else if (role === Role.CLIENT)
+      // Assuming CLIENT_DASHBOARD exists
+      homePageUrl = Pages.CLIENT_DASHBOARD;
+    else homePageUrl = Pages.CATALOGO; // Default for authenticated non-admin/client
+  }
+
+  const handleLogout = () => {
+    logout(); // Call the logout function from useAuth
+    navigate(Pages.HOME); // Redirect to login page after logout
+  };
 
   return (
     <TopBarContainer>
-      <TitleContainer to={Pages.HOME}>
+      <TitleContainer to={homePageUrl}>
         <LogoImage src="https://github.com/DoubleMyD/react_ottica_moderna-backup-/blob/main/public/logo192.png?raw=true" />
-        <h1>My Application</h1>
+        <h1>Modern Optics</h1> {/* More descriptive title */}
       </TitleContainer>
 
-      <PrimaryButton to={Pages.CATALOG}>Catalogo</PrimaryButton>
-      <PrimaryButton to={Pages.CONTACT}>Contatti</PrimaryButton>
-
-      <SecondaryButton to={Pages.LOGIN}>Login</SecondaryButton>
-      <SecondaryButton to={Pages.REVIEWS}>Recensioni</SecondaryButton>
-      <SecondaryButton to={Pages.BRAND_STORY}>BrandStory</SecondaryButton>
-
-      {/* Example for Logout/Admin (future use):
-      {user ? (
-        <>
-          {user.role === 'admin' && (
-            <PrimaryButton to={Pages.ADMIN}>Admin Dashboard</PrimaryButton>
-          )}
-          <SecondaryButton onClick={logout}>Logout</SecondaryButton>
-        </>
-      ) : (
-        <SecondaryButton to={Pages.LOGIN}>Login</SecondaryButton>
-      )}
-      */}
+      <NavButtonsContainer>
+        {" "}
+        {/* NEW: Wrap navigation buttons here */}
+        {role !== Role.ADMIN && (
+          <PrimaryButton to={Pages.CATALOGO}>Catalogo</PrimaryButton>
+        )}
+        {isAuthenticated && role !== Role.ADMIN && (
+          <PrimaryButton to={Pages.PROMOTIONS}>Promozioni</PrimaryButton>
+        )}
+        {isAuthenticated && role === Role.CLIENT && (
+          <PrimaryButton to={Pages.CLIENT_DASHBOARD}>DAHSBOARD</PrimaryButton>
+        )}
+        {/* Admin Dashboard button, if applicable */}
+        {isAuthenticated && role === Role.ADMIN && (
+          <PrimaryButton to={Pages.ADMIN}>Admin</PrimaryButton>
+        )}
+        
+        <SecondaryButton to={Pages.REVIEWS}>Recensioni</SecondaryButton>
+        <SecondaryButton to={Pages.FAQs}>Faqs</SecondaryButton>
+        <SecondaryButton to={Pages.CONTACT}>Contatti</SecondaryButton>
+        <SecondaryButton to={Pages.BRAND_STORY}>BrandStory</SecondaryButton>
+        {/* Conditional Login/Logout Button */}
+        {!isAuthenticated ? (
+          <PrimaryButton to={Pages.LOGIN}>
+            Login
+          </PrimaryButton> /* Changed to Primary for login CTA */
+        ) : (
+          <SecondaryButton onClick={handleLogout}>Logout</SecondaryButton>
+        )}
+      </NavButtonsContainer>
     </TopBarContainer>
   );
 };

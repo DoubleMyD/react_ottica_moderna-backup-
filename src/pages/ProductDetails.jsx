@@ -6,8 +6,18 @@ import { buildQueryStringV5 } from "../utils/buildQueryString";
 import useProductPromotions from "../hooks/useProductPromotion";
 import useProductFAQs from "../hooks/useProductFAQs"; // <--- Import the new FAQ hook
 
+import {
+  SectionCard,
+  SectionTitle,
+  SectionContent,
+  PromotionListItem, // NEW: Specific style for list items
+  // If you decide to keep FilterTagContainer/FilterTag here for client types, import them:
+  // FilterTagContainer, FilterTag
+} from "../components/ClientDetail/ClientPromotionsSection/StyledClientPromotionsSection"; // Import from new style file
+
 // Import your FAQList component
 import FAQList from "../components/FAQ/FAQList";
+import { formatItalianDate } from "../utils/formatters";
 
 import {
   ProductDetailContainer,
@@ -29,6 +39,7 @@ import {
   PromotionText,
   PlaceholderText,
 } from "../styles/StyledProductDetails"; // Ensure all necessary styled components are imported
+import { AdminSection, Pages } from "../data/constants";
 
 const ProductDetailPage = () => {
   const { documentId } = useParams();
@@ -44,6 +55,7 @@ const ProductDetailPage = () => {
     error: promotionsError,
   } = useProductPromotions(documentId);
 
+  console.log("Internal Product Promotions : ", promotions);
   // --- Use the new custom hook to fetch FAQs ---
   const {
     faqs, // This now holds the array of FAQ entries
@@ -78,7 +90,9 @@ const ProductDetailPage = () => {
           if (response.status === 404) {
             throw new Error(`Product with ID ${documentId} not found.`);
           }
-          throw new Error(`Failed to fetch product data: ${response.statusText}`);
+          throw new Error(
+            `Failed to fetch product data: ${response.statusText}`
+          );
         }
 
         const data = await response.json();
@@ -104,6 +118,21 @@ const ProductDetailPage = () => {
 
   const handleGoBack = () => {
     navigate(-1);
+  };
+
+  const handlePromotionClick = (promotionDocumentId, event) => {
+    event.stopPropagation(); // Prevent row expansion if applicable
+    // Navigate to a promotion detail page (e.g., /promotions/:documentId)
+    navigate(`${Pages.PROMOTIONS}/${promotionDocumentId}`); // Adjust this path as per your routing
+  };
+
+  // New handler for clicking on an associated client type
+  const handleAssociatedTypeClick = (typeId, event) => {
+    event.stopPropagation(); // Prevent row expansion if applicable
+    // Navigate to the TipologieCliente section with the specific typeId
+    navigate(
+      `${Pages.ADMIN}?section=${AdminSection.Profilazione_TipologieCliente}&typeId=${typeId}`
+    );
   };
 
   // --- Combined Loading and Error States (now includes FAQs) ---
@@ -150,7 +179,8 @@ const ProductDetailPage = () => {
     quantita_disponibili,
   } = currentProductData;
 
-  const imageUrl = immagine?.url || `https://placehold.co/600x400/AAAAAA/FFFFFF?text=No+Image`;
+  const imageUrl =
+    immagine?.url || `https://placehold.co/600x400/AAAAAA/FFFFFF?text=No+Image`;
   const isAvailable = quantita_disponibili > 0;
 
   return (
@@ -182,15 +212,73 @@ const ProductDetailPage = () => {
 
           {/* Promotions Section */}
           <PromotionsSection className="mt-8">
-            <PromotionsTitle>Promozioni Rilevanti</PromotionsTitle>
+            <PromotionsTitle>Promozioni</PromotionsTitle>
             {promotionsError && (
-              <PlaceholderText style={{ color: 'red' }}>
+              <PlaceholderText style={{ color: "red" }}>
                 Errore caricamento promozioni: {promotionsError}
               </PlaceholderText>
             )}
-            {!promotionsLoading && promotions.length === 0 && !promotionsError && (
-              <PlaceholderText>Nessuna promozione disponibile per questo prodotto.</PlaceholderText>
+            {!promotionsLoading &&
+              promotions.length === 0 &&
+              !promotionsError && (
+                <PlaceholderText>
+                  Nessuna promozione disponibile per questo prodotto.
+                </PlaceholderText>
+              )}
+
+            {promotions && promotions.length > 0 ? (
+              <ul>
+                {promotions.map((promo) => (
+                  <PromotionListItem
+                    key={promo.id}
+                    onClick={(e) => handlePromotionClick(promo.documentId, e)} // Use documentId for navigation
+                  >
+                    <div>
+                      <strong>{promo.titolo}</strong>
+                      {/* Ensure description is not null/undefined before substring */}
+                      <p>
+                        {promo.descrizione
+                          ? `${promo.descrizione.substring(0, 100)}...`
+                          : "Nessuna descrizione."}
+                      </p>
+                      <div className="date-info">
+                        {promo.data_inizio &&
+                          `Inizia il: ${formatItalianDate(promo.data_inizio)}`}
+                        {promo.data_fine &&
+                          ` | Termina il: ${formatItalianDate(
+                            promo.data_fine
+                          )}`}
+                      </div>
+
+                      {/* CORRECTED SECTION BELOW */}
+                      {promo.relatedDettaglioPromozionis &&
+                        promo.relatedDettaglioPromozionis.length > 0 && (
+                          <div>
+                            {" "}
+                            {/* Wrapper for the list of dettaglio_promozionis */}
+                            {promo.relatedDettaglioPromozionis.map(
+                              (dettaglio_promo, index) => {
+                                return (
+                                  <div
+                                    key={dettaglio_promo.id || index}
+                                    style={{ fontSize: "0.9em", color: "#555" }}
+                                  >
+                                    {/* Corrected property names: tipo_applicazione and valore */}
+                                    {`Tipo: ${dettaglio_promo.tipo_applicazione} Sconto: ${dettaglio_promo.valore}%`}
+                                  </div>
+                                );
+                              }
+                            )}
+                          </div>
+                        )}
+                    </div>
+                  </PromotionListItem>
+                ))}
+              </ul>
+            ) : (
+              <></>
             )}
+
             {!promotionsLoading && promotions.length > 0 && (
               <PromotionsList>
                 {promotions.map((dettaglioPromo) => {
@@ -199,17 +287,21 @@ const ProductDetailPage = () => {
                   const valore = dettaglioPromo.valore;
 
                   if (!relatedPromozione) return null;
-
                   return (
                     <PromotionItem key={dettaglioPromo.id}>
                       <PromotionText>
-                        <strong>{relatedPromozione.titolo}:</strong> {relatedPromozione.descrizione}
-                        {tipoApplicazione && valore !== undefined && (
-                          ` (${tipoApplicazione} ${valore})`
-                        )}
-                        {relatedPromozione.data_inizio && relatedPromozione.data_fine && (
-                          ` (Valida dal ${new Date(relatedPromozione.data_inizio).toLocaleDateString('it-IT')} al ${new Date(relatedPromozione.data_fine).toLocaleDateString('it-IT')})`
-                        )}
+                        <strong>{relatedPromozione.titolo}:</strong>{" "}
+                        {relatedPromozione.descrizione}
+                        {tipoApplicazione &&
+                          valore !== undefined &&
+                          ` (${tipoApplicazione} ${valore})`}
+                        {relatedPromozione.data_inizio &&
+                          relatedPromozione.data_fine &&
+                          ` (Valida dal ${new Date(
+                            relatedPromozione.data_inizio
+                          ).toLocaleDateString("it-IT")} al ${new Date(
+                            relatedPromozione.data_fine
+                          ).toLocaleDateString("it-IT")})`}
                       </PromotionText>
                     </PromotionItem>
                   );
@@ -220,26 +312,33 @@ const ProductDetailPage = () => {
 
           {/* --- FAQs Section --- */}
           {faqsError && (
-            <PromotionsSection className="mt-8"> {/* Reuse section style */}
+            <PromotionsSection className="mt-8">
+              {" "}
+              {/* Reuse section style */}
               <PromotionsTitle>Domande Frequenti</PromotionsTitle>
-              <PlaceholderText style={{ color: 'red' }}>
+              <PlaceholderText style={{ color: "red" }}>
                 Errore caricamento FAQ: {faqsError}
               </PlaceholderText>
             </PromotionsSection>
           )}
           {!faqsLoading && faqs.length > 0 && (
-            <PromotionsSection className="mt-8"> {/* Reuse section style */}
+            <PromotionsSection className="mt-8">
+              {" "}
+              {/* Reuse section style */}
               <FAQList faqs={faqs} />
             </PromotionsSection>
           )}
           {!faqsLoading && faqs.length === 0 && !faqsError && (
-            <PromotionsSection className="mt-8"> {/* Reuse section style */}
+            <PromotionsSection className="mt-8">
+              {" "}
+              {/* Reuse section style */}
               <PromotionsTitle>Domande Frequenti</PromotionsTitle>
-              <PlaceholderText>Nessuna FAQ disponibile per questo prodotto.</PlaceholderText>
+              <PlaceholderText>
+                Nessuna FAQ disponibile per questo prodotto.
+              </PlaceholderText>
             </PromotionsSection>
           )}
           {/* --- End FAQs Section --- */}
-
         </ProductInfoContainer>
       </ProductContentWrapper>
     </ProductDetailContainer>

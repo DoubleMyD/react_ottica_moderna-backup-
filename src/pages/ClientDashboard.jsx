@@ -14,11 +14,13 @@ import {
   LogoutButton,
   MainContent,
 } from "../styles/StyledClientDashboard";
+import useUserAndClienteData from "../hooks/useUserAndClienteData";
 
 const ClientDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { clienteData } = useUserAndClienteData();
 
   // Memoize getActiveSectionFromUrl to prevent it from changing on every render
   // and satisfy the useEffect dependency without unnecessary re-renders.
@@ -52,7 +54,7 @@ const ClientDashboard = () => {
       case "profile":
         return <ClientProfileSection />;
       case "purchases":
-        return <PurchaseHistorySection />;
+        return <PurchaseHistorySection clientId={clienteData.id}/>;
       default:
         return <ClientProfileSection />;
     }
@@ -81,3 +83,11 @@ const ClientDashboard = () => {
 };
 
 export default ClientDashboard;
+
+export const ClientDashboardSection = {
+  Profile: "profile",
+  Purchases: "purchases",
+  Promotions: "promotion",
+  DettaglioPromozioni: "dettaglio-promozioni",
+  GeneralFaqs: "general-faqs",
+}
