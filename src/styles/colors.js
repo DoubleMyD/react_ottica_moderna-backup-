@@ -5,7 +5,7 @@ export const Colors = {
   primaryBlue: "#007bff",
   darkBlue: "#0056b3",
   hoverBlue: "#004494",
-
+  
   //background
   background: "#ffffff",
 

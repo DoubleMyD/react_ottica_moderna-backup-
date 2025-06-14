@@ -24,3 +24,14 @@ export const formatItalianDate = (dateString) => {
     return "Data non valida";
   }
 };
+
+export const formatPercentage = (value, locale = "it-IT") => {
+  if (value === null || value === undefined) {
+    return "N.D.";
+  }
+  return new Intl.NumberFormat(locale, {
+    style: "percent",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+};

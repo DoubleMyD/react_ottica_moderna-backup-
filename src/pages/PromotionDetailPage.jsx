@@ -1,7 +1,7 @@
 // src/pages/PromotionDetailPage.jsx
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import usePromotionDetails from '../hooks/usePromotionDetails'; // <--- Your new hook
+import usePromotionDetail from '../hooks/usePromotionDetail'; // <--- Your new hook
 import { STRAPI_BASE_URL } from '../data/api'; // For constructing image URLs
 
 import {
@@ -30,7 +30,7 @@ const PromotionDetailPage = () => {
   const { documentId: promotionDocumentId } = useParams(); // Get the promotion ID from the URL
   const navigate = useNavigate();
 
-  const { promotion, loading, error, refetch } = usePromotionDetails(promotionDocumentId);
+  const { promotion, loading, error, refetch } = usePromotionDetail(promotionDocumentId);
 
   const handleGoBack = () => {
     navigate(-1); // Navigates to the previous page

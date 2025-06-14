@@ -17,18 +17,35 @@ import ClientTypesList from "../components/ClientTypes/ClientTypesList";
 import ClientList from "../components/ClientList/ClientList";
 import { useAuth } from "../hooks/authContext";
 import PromotionalCampaignsList from "../components/AdminPromotionalCampaign/AdminPromotionalCampaignsList";
+import AdminProductsSection from "../components/AdminProducts/AdminProducts";
 
-// Placeholder components for other sections
-const MarketingContent = () => (
-  <div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
-    Contenuto Marketing (Da implementare)
-  </div>
-);
-const ProductsContent = () => (
-  <div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
-    Contenuto Prodotti (Da implementare)
-  </div>
-);
+import styled from "styled-components";
+import { Colors } from "../styles/colors";
+// Import ALL stat cards (ensure correct paths)
+import TotalRevenueCard from "../components/Stats/GeneralStats/TotalRevenueCard";
+import TotalTransactionsCard from "../components/Stats/GeneralStats/TotalTransactionsCard";
+import AverageOrderValueCard from "../components/Stats/GeneralStats/AverageOrderValueCard";
+import MonthlyRevenueGrowthCard from "../components/Stats/GeneralStats/MonthlyRevenueGrowthCard";
+import AvgItemsPerTransactionCard from "../components/Stats/GeneralStats/AvgItemsPerTransactionCard";
+
+import TotalRegisteredClientsCard from "../components/Stats/ClientsStats/TotalRegisteredClientsCard";
+import NewClientsCountCard from "../components/Stats/ClientsStats/NewClientsCountCard";
+import ReturningClientsPercentageCard from "../components/Stats/ClientsStats/ReturningClientsPercentageCard";
+import AverageCustomerSpendCard from "../components/Stats/ClientsStats/AverageCustomerSpendCard";
+import ClientsByTypeDistributionCard from "../components/Stats/ClientsStats/ClientsByTypeDistributionCard";
+
+import MostSoldProductCard from "../components/Stats/ProducPromotionStats/MostSoldProductCard"; // NEW
+import MostProfitableProductTypeCard from "../components/Stats/ProducPromotionStats/MostProfitableProductTypeCard"; // NEW
+import TopContributingBrandCard from "../components/Stats/ProducPromotionStats/TopContributingBrandCard"; // NEW
+import SalesSeasonalityCard from "../components/Stats/ProducPromotionStats/SalesSeasonalityCard"; // NEW
+import PromotionUsageRateCard from "../components/Stats/ProducPromotionStats/PromotionUsageRateCard"; // NEW - Renamed from usePromotionUsageStats
+
+// NEW: Import the last 5 promotion-related cards
+import TotalActivePromotionsCard from "../components/Stats/PromotionsStats/TotalActivePromotionsCard";
+import AvgClientsPerPromotionCard from "../components/Stats/PromotionsStats/AvgClientsPerPromotionCard";
+import PromotionWithMostProductsCard from "../components/Stats/PromotionsStats/PromotionWithMostProductsCard";
+import LongestPromotionCard from "../components/Stats/PromotionsStats/LongestPromotionCard";
+import PromotionsByClientTypeDistributionCard from "../components/Stats/PromotionsStats/PromotionsByClientTypeDistributionCard";
 
 const AdminDashboardPage = () => {
   const {logout} = useAuth();
@@ -40,7 +57,7 @@ const AdminDashboardPage = () => {
   const getActiveSectionFromUrlAndParams = useCallback(() => {
     const params = new URLSearchParams(location.search);
     const section =
-      params.get("section") || AdminSection.Profilazione_TipologieCliente;
+      params.get("section") || AdminSection.Dashboard_Overview;
     const typeId = params.get("typeId"); // Get the typeId parameter
     return { section, typeId };
   }, [location.search]);
@@ -97,6 +114,36 @@ const AdminDashboardPage = () => {
 
   const renderMainContent = () => {
     switch (activeSection) {
+      case AdminSection.Dashboard_Overview: // NEW CASE for overall dashboard/profiling
+        return (
+          <StatsGridContainer>
+            {/* First 5 Stats */}
+            <TotalRevenueCard />
+            <TotalTransactionsCard />
+            <AverageOrderValueCard />
+            <MonthlyRevenueGrowthCard />
+            <AvgItemsPerTransactionCard />
+            {/* Next 5 Stats (Client-focused) */}
+            <TotalRegisteredClientsCard />
+            <NewClientsCountCard />
+            <ReturningClientsPercentageCard />
+            <AverageCustomerSpendCard />
+            <ClientsByTypeDistributionCard />
+            {/* Last 5 Stats (General Product/Promotion-focused) */}
+            <MostSoldProductCard />
+            <MostProfitableProductTypeCard />
+            <TopContributingBrandCard />
+            <SalesSeasonalityCard />
+            <PromotionUsageRateCard />
+            {/* NEW: All promotions-specific Stats */}
+            <TotalActivePromotionsCard />
+            <AvgClientsPerPromotionCard />
+            <PromotionWithMostProductsCard />
+            <LongestPromotionCard />
+            <PromotionsByClientTypeDistributionCard />
+          </StatsGridContainer>
+        );
+
       case AdminSection.Profilazione_TipologieCliente:
         // Pass both setActiveSection and focusedTypeId to ClientTypesList
         return (
@@ -111,7 +158,7 @@ const AdminDashboardPage = () => {
       case AdminSection.PromotionalCampaigns:
         return <PromotionalCampaignsList />;
       case AdminSection.Prodotti:
-        return <ProductsContent />;
+        return <AdminProductsSection />;
       default:
         // Default to ClientTypesList
         return (
@@ -126,9 +173,6 @@ const AdminDashboardPage = () => {
   return (
     <AdminDashboardContainer>
       <AdminSidebar>
-        <SidebarProfileImage>
-          <img src="/path/to/admin-profile.jpg" alt="Admin Profile" />
-        </SidebarProfileImage>
         <SidebarNav>
           <SidebarButton
             $active={
@@ -144,7 +188,9 @@ const AdminDashboardPage = () => {
           </SidebarButton>
           <SidebarButton
             $active={activeSection === AdminSection.PromotionalCampaigns}
-            onClick={() => handleSectionChange(AdminSection.PromotionalCampaigns)}
+            onClick={() =>
+              handleSectionChange(AdminSection.PromotionalCampaigns)
+            }
           >
             Marketing
           </SidebarButton>
@@ -174,9 +220,6 @@ const AdminDashboardPage = () => {
       </AdminSidebar>
 
       <AdminMainContent>
-        <AdminHeader>
-          {/* Content for AdminHeader is assumed to be provided externally or by its own component */}
-        </AdminHeader>
         <AdminContentArea>{renderMainContent()}</AdminContentArea>
       </AdminMainContent>
     </AdminDashboardContainer>

@@ -5,6 +5,7 @@ import { Colors } from "./colors";
 export const AdminDashboardContainer = styled.div`
   display: flex;
   min-height: 100vh; /* Full viewport height */
+  max-width: 90vw;
   background-color: ${Colors.lightBackground};
   font-family: "Inter", sans-serif;
   color: ${Colors.darkText};
@@ -12,6 +13,7 @@ export const AdminDashboardContainer = styled.div`
 
 export const AdminSidebar = styled.div`
   width: 250px; /* Fixed width for the sidebar */
+  min-width: 10vw;
   background-color: ${Colors.darkSectionTitle}; /* Dark background for sidebar */
   color: ${Colors.lightText};
   padding: 20px;

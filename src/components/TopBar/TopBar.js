@@ -24,12 +24,12 @@ const TopBar = () => {
     else if (role === Role.CLIENT)
       // Assuming CLIENT_DASHBOARD exists
       homePageUrl = Pages.CLIENT_DASHBOARD;
-    else homePageUrl = Pages.CATALOGO; // Default for authenticated non-admin/client
+    else homePageUrl = Pages.CATALOG; // Default for authenticated non-admin/client
   }
 
   const handleLogout = () => {
-    logout(); // Call the logout function from useAuth
-    navigate(Pages.HOME); // Redirect to login page after logout
+    logout();
+    navigate(Pages.HOME);
   };
 
   return (
@@ -43,7 +43,7 @@ const TopBar = () => {
         {" "}
         {/* NEW: Wrap navigation buttons here */}
         {role !== Role.ADMIN && (
-          <PrimaryButton to={Pages.CATALOGO}>Catalogo</PrimaryButton>
+          <PrimaryButton to={Pages.CATALOG}>Catalogo</PrimaryButton>
         )}
         {isAuthenticated && role !== Role.ADMIN && (
           <PrimaryButton to={Pages.PROMOTIONS}>Promozioni</PrimaryButton>
@@ -55,7 +55,7 @@ const TopBar = () => {
         {isAuthenticated && role === Role.ADMIN && (
           <PrimaryButton to={Pages.ADMIN}>Admin</PrimaryButton>
         )}
-        
+
         <SecondaryButton to={Pages.REVIEWS}>Recensioni</SecondaryButton>
         <SecondaryButton to={Pages.FAQs}>Faqs</SecondaryButton>
         <SecondaryButton to={Pages.CONTACT}>Contatti</SecondaryButton>

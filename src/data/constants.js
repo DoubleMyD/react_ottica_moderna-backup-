@@ -1,3 +1,5 @@
+export const APP_URL = "http://localhost:3000";
+
 export class Role {
     static ADMIN = "Amministratore";
     static CLIENT = "Authenticated";
@@ -24,6 +26,7 @@ export const Pages = {
 // src/utils/AdminSection.js
 
 export const AdminSection = {
+  Dashboard_Overview: "overview",
   Profilazione_TipologieCliente: "tipologieCliente",
   Profilazione_ElencoClienti: "elencoClienti",
   PromotionalCampaigns: "promotional-campaigns",

@@ -28,7 +28,7 @@ const useClientTypes = () => {
               fields: ["nome", "cognome"], // Added cognome and email for full client display
             },
           },
-          fields: ["nome", "descrizione", "tratti_caratteristici"],
+          fields: ["nome", "descrizione", "tratti_caratteristici", "documentId", "id"],
           pagination: { pageSize: 100000 },
         };
         const queryString = buildQueryStringV5(queryParams);

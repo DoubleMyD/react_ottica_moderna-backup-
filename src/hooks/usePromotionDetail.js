@@ -16,7 +16,7 @@ import { useAuth } from "./authContext";
  * - error: An error object or null if no error occurred.
  * - refetch: A function to manually re-trigger the data fetch.
  */
-const usePromotionDetails = (promotionDocumentId) => {
+const usePromotionDetail = (promotionDocumentId) => {
   const { authToken } = useAuth();
   const [promotion, setPromotion] = useState(null);
   const [involvedProducts, setInvolvedProducts] = useState([]); // NEW state for products
@@ -46,7 +46,7 @@ const usePromotionDetails = (promotionDocumentId) => {
             populate: {
               prodotto: {
                 // Name of the relation on your 'DettaglioPromozione' content type
-                fields: ["nome", "prezzo_unitario", "descrizione"], // Fields needed from product
+                fields: ["brand", "nome", "prezzo_unitario", "descrizione"], // Fields needed from product
                 populate: {
                   immagine: {
                     fields: ["url", "name"], // Fields needed from product image
@@ -124,6 +124,10 @@ const usePromotionDetails = (promotionDocumentId) => {
                 prezzo_unitario: product.prezzo_unitario,
                 descrizione: product.descrizione,
                 immagine: product.immagine, // Storing the direct URL
+                brand: product.brand,
+                // NEW: Add promotion-specific details to the product object
+                tipo_applicazione_promozione: dettaglio.tipo_applicazione,
+                valore_promozione: dettaglio.valore,
               });
             }
           }
@@ -160,4 +164,4 @@ const usePromotionDetails = (promotionDocumentId) => {
   };
 };
 
-export default usePromotionDetails;
+export default usePromotionDetail;

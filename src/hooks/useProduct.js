@@ -9,101 +9,103 @@ const useProducts = (filters = {}) => {
   const [error, setError] = useState(null);
   const [meta, setMeta] = useState(null);
 
-  // States for unique filter options. These will now be calculated ONCE from the full dataset.
   const [availableBrands, setAvailableBrands] = useState([]);
   const [availableTypes, setAvailableTypes] = useState([]);
 
-  // useRef to store the full, unfiltered, and formatted list of products fetched once.
   const allProductsDataRef = useRef([]);
-
-  // State to track if the initial, comprehensive data fetch is complete
   const [initialDataFetched, setInitialDataFetched] = useState(false);
 
-  // --- Effect 1: Initial fetch of ALL product data (runs only once on component mount) ---
-  useEffect(() => {
-    const fetchAllProductsForLocalFiltering = async () => {
-      setLoading(true);
-      setError(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-      try {
-        const queryParams = {
-          populate: {
-            immagine: {
-              fields: ["name", "alternativeText", "width", "height", "url"],
-            },
+  const fetchAllProductsForLocalFiltering = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const queryParams = {
+        populate: {
+          immagine: {
+            fields: ["name", "alternativeText", "width", "height", "url"],
           },
-          fields: [
-            "nome",
-            "descrizione",
-            "brand",
-            "tipologia",
-            "quantita_disponibili",
-            "prezzo_unitario",
-          ],
-          pagination: { pageSize: 100000 },
-        };
-        const queryString = buildQueryStringV5(queryParams);
+        },
+        fields: [
+          "nome",
+          "descrizione",
+          "brand",
+          "tipologia",
+          "quantita_disponibili",
+          "prezzo_unitario",
+          "documentId", // Added documentId to fetched fields
+        ],
+        pagination: { pageSize: 100000 },
+      };
+      const queryString = buildQueryStringV5(queryParams);
 
-        console.log(
-          `[useProducts] Fetching ALL products for local filtering (once): ${STRAPI_BASE_API_URL}/prodottos?${queryString}`
+      console.log(
+        `[useProducts] Fetching ALL products for local filtering (once): ${STRAPI_BASE_API_URL}/prodottos?${queryString}`
+      );
+
+      const response = await fetch(
+        `${STRAPI_BASE_API_URL}/prodottos?${queryString}`
+      );
+
+      if (!response.ok) {
+        const errorBody = await response.json();
+        throw new Error(
+          errorBody.error?.message ||
+            `Failed to fetch all products: ${response.statusText}`
         );
-
-        const response = await fetch(
-          `${STRAPI_BASE_API_URL}/prodottos?${queryString}`
-        );
-
-        if (!response.ok) {
-          const errorBody = await response.json();
-          throw new Error(
-            errorBody.error?.message ||
-              `Failed to fetch all products: ${response.statusText}`
-          );
-        }
-
-        const data = await response.json();
-
-        const formattedAllProducts = Array.isArray(data.data)
-          ? data.data.map((item) => ({
-              id: item.id,
-              ...item,
-              immagine:
-                item?.immagine && item.immagine.url ? item.immagine : null,
-            }))
-          : [];
-
-        allProductsDataRef.current = formattedAllProducts;
-
-        // --- NEW LOCATION: Calculate ALL unique filter options from the full dataset here ---
-        const allBrandsFromData = new Set();
-        const allTypesFromData = new Set();
-
-        allProductsDataRef.current.forEach((productItem) => {
-          if (productItem.brand) allBrandsFromData.add(productItem.brand);
-          if (productItem.tipologia)
-            allTypesFromData.add(productItem.tipologia);
-        });
-
-        setAvailableBrands(Array.from(allBrandsFromData).sort());
-        setAvailableTypes(Array.from(allTypesFromData).sort());
-        // --- END NEW LOCATION ---
-
-        setInitialDataFetched(true);
-        console.log(
-          `[useProducts] All products fetched and stored in ref. Total: ${allProductsDataRef.current.length} items.`
-        );
-      } catch (err) {
-        console.error(
-          "[useProducts] Error fetching all products for local filtering:",
-          err
-        );
-        setError(`Errore nel caricamento dei dati iniziali: ${err.message}.`);
-      } finally {
-        setLoading(false);
       }
-    };
 
+      const data = await response.json();
+
+      const formattedAllProducts = Array.isArray(data.data)
+        ? data.data.map((item) => ({
+            id: item.id,
+            documentId: item.documentId, // Ensure documentId is mapped
+            ...item,
+            immagine:
+              item?.immagine && item.immagine.url ? item.immagine : null,
+          }))
+        : [];
+
+      allProductsDataRef.current = formattedAllProducts;
+
+      const allBrandsFromData = new Set();
+      const allTypesFromData = new Set();
+
+      allProductsDataRef.current.forEach((productItem) => {
+        if (productItem.brand) allBrandsFromData.add(productItem.brand);
+        if (productItem.tipologia) allTypesFromData.add(productItem.tipologia);
+      });
+
+      setAvailableBrands(Array.from(allBrandsFromData).sort());
+      setAvailableTypes(Array.from(allTypesFromData).sort());
+
+      setInitialDataFetched(true);
+      console.log(
+        `[useProducts] All products fetched and stored in ref. Total: ${allProductsDataRef.current.length} items.`
+      );
+    } catch (err) {
+      console.error(
+        "[useProducts] Error fetching all products for local filtering:",
+        err
+      );
+      setError(`Errore nel caricamento dei dati iniziali: ${err.message}.`);
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshTrigger]); // DEPENDENCY ADDED: refreshTrigger
+
+  // --- Effect 1: Initial fetch of ALL product data (now depends on refreshTrigger) ---
+  useEffect(() => {
     fetchAllProductsForLocalFiltering();
-  }, []); // Empty dependency array: runs only once
+  }, [fetchAllProductsForLocalFiltering]); // DEPENDENCY ADDED: fetchAllProductsForLocalFiltering
+
+  // --- Function to trigger a manual refetch ---
+  const refetchProducts = useCallback(() => {
+    setRefreshTrigger((prev) => prev + 1); // Increment trigger to re-run fetch
+  }, []);
 
   // --- Function 2: Apply local filters, sort, and paginate (runs on filter changes or initial data ready) ---
   const applyLocalFilters = useCallback(() => {
@@ -120,12 +122,7 @@ const useProducts = (filters = {}) => {
       return;
     }
 
-    console.log(
-      "[useProducts] Applying local filters. Current filters:",
-      filters
-    );
-
-    let currentFilteredProducts = [...allProductsDataRef.current]; // Start with a copy of the full dataset
+    let currentFilteredProducts = [...allProductsDataRef.current];
 
     // 1. Apply Filters based on the `filters` prop
     if (filters.brands && filters.brands.length > 0) {
@@ -134,9 +131,8 @@ const useProducts = (filters = {}) => {
       );
     }
     if (filters.tipologie && filters.tipologie.length > 0) {
-      // Using 'tipologies' from filter object as per your fix
-      currentFilteredProducts = currentFilteredProducts.filter(
-        (p) => filters.tipologie.includes(p.tipologia) // Corrected 'tipologia' field name in product data
+      currentFilteredProducts = currentFilteredProducts.filter((p) =>
+        filters.tipologie.includes(p.tipologia)
       );
     }
     if (filters.soloDisponibili) {
@@ -162,12 +158,9 @@ const useProducts = (filters = {}) => {
       (a.nome || "").localeCompare(b.nome || "")
     );
 
-    // --- REMOVED from here: Dynamic Calculation of Filter Options ---
-    // This logic is now in the initial fetch useEffect.
-
     // 3. Client-side Pagination
     const pageSize = 25;
-    const currentPage = 1;
+    const currentPage = 1; // Assuming always page 1 for now, or add as filter prop
     const totalItems = currentFilteredProducts.length;
     const totalPages = Math.ceil(totalItems / pageSize);
 
@@ -186,11 +179,15 @@ const useProducts = (filters = {}) => {
         total: totalItems,
       },
     });
-
-    console.log(
-      `[useProducts] Local filtering applied. Displaying ${paginatedProducts.length} of ${totalItems} total products.`
-    );
-  }, [filters, initialDataFetched, error]);
+  }, [
+    // IMPORTANT: Ensure the 'filters' object passed to this hook is MEMOIZED
+    // in the parent component using `useMemo`. Otherwise, this `useCallback`
+    // will re-create `applyLocalFilters` on every parent re-render if the
+    // filters object reference changes, leading to an infinite loop.
+    JSON.stringify(filters), // Use JSON.stringify for deep comparison of filters object
+    initialDataFetched,
+    error,
+  ]);
 
   // --- Effect 3: Trigger local filtering whenever the `applyLocalFilters` callback changes ---
   useEffect(() => {
@@ -202,9 +199,9 @@ const useProducts = (filters = {}) => {
     loading,
     error,
     meta,
-    availableBrands, // These now always show all options from the full dataset
-    availableTypes, // These now always show all options from the full dataset
-    refetchProducts: applyLocalFilters,
+    availableBrands,
+    availableTypes,
+    refetchProducts: fetchAllProductsForLocalFiltering, // Expose applyLocalFilters for manual refresh
   };
 };
 

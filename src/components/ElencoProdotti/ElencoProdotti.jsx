@@ -11,15 +11,34 @@ import {
   ProductBrand,
   ProductAction,
   ViewButton,
+  ProductPromoDetails, // NEW: Import the new styled component
+  PromoDetailItem, // NEW: Import the nested styled component
+  AdminActionsContainer, // NEW: Import AdminActionsContainer
+  AdminActionButton, // NEW: Import AdminActionButton
 } from "./StyledElencoProdotti";
 import { STRAPI_BASE_URL } from "../../data/api";
 import { Pages } from "../../data/constants";
 
-const ElencoProdotti = ({ products }) => {
+// Updated props: onEditProduct and onDeleteProduct now expect to receive the full product object
+const ElencoProdotti = ({ products, isInPromotionContext = false, isAdminView = false, onEditProduct, onDeleteProduct }) => {
   const navigate = useNavigate();
 
   const handleProductClick = (documentId) => {
     navigate(`${Pages.CATALOG}/${documentId}`);
+  };
+
+  const handleEditClick = (product, e) => { // Now receives full product object
+    e.stopPropagation();
+    if (onEditProduct) {
+      onEditProduct(product); // Pass the entire product object
+    }
+  };
+
+  const handleDeleteClick = (documentId, e) => {
+    e.stopPropagation();
+    if (onDeleteProduct) {
+      onDeleteProduct(documentId);
+    }
   };
 
   return (
@@ -29,8 +48,9 @@ const ElencoProdotti = ({ products }) => {
         const strapiImageUrl = hasStrapiImage
           ? `${STRAPI_BASE_URL}${product.immagine.url}`
           : null;
-        
+
         const placeholderImageUrl = "/images/placeholder-product.png";
+        
         return (
           <ProductCard key={product.id}>
             {product.brand && <ProductBrand>{product.brand}</ProductBrand>}
@@ -56,17 +76,62 @@ const ElencoProdotti = ({ products }) => {
 
             {product.prezzo_unitario !== undefined &&
               product.prezzo_unitario !== null && (
-                <ProductPrice>${product.prezzo_unitario.toFixed(2)}</ProductPrice>
+                <ProductPrice>
+                  ${product.prezzo_unitario.toFixed(2)}
+                </ProductPrice>
               )}
 
             <ProductInfo>
               <ProductName>{product.nome}</ProductName>
             </ProductInfo>
 
+            {/* NEW: Display promotion-specific details if in promotion context */}
+            {isInPromotionContext &&
+              (product.tipo_applicazione_promozione ||
+                product.valore_promozione !== undefined) && (
+                <ProductPromoDetails>
+                  {product.tipo_applicazione_promozione && (
+                    <PromoDetailItem>
+                      <span>Tipo applicazione:</span>
+                      <strong>{product.tipo_applicazione_promozione}</strong>
+                    </PromoDetailItem>
+                  )}
+                  {product.valore_promozione !== undefined &&
+                    product.valore_promozione !== null && (
+                      <PromoDetailItem>
+                        <span>Valore:</span>
+                        <strong>{product.valore_promozione}</strong>
+                      </PromoDetailItem>
+                    )}
+                </ProductPromoDetails>
+              )}
+
             <ProductAction>
-              <ViewButton onClick={() => handleProductClick(product.documentId)}>
+              <ViewButton
+                onClick={() => handleProductClick(product.documentId)}
+              >
                 View Details
               </ViewButton>
+              {isAdminView && (
+                <>
+                  <AdminActionButton
+                    onClick={(e) => handleEditClick(product, e)}
+                    title="Modifica Prodotto"
+                  >
+                    {" "}
+                    {/* Pass full product */}
+                    ✏️
+                  </AdminActionButton>
+                  <AdminActionButton
+                    $delete
+                    onClick={(e) => handleDeleteClick(product.documentId, e)}
+                    title="Elimina Prodotto"
+                  >
+                    🗑️
+                  </AdminActionButton>
+                </>
+              )}
+              {}
             </ProductAction>
           </ProductCard>
         );

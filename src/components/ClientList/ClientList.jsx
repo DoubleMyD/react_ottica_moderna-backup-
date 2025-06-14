@@ -5,6 +5,7 @@ import {
   AdminSectionControls,
   AdminActionButton,
   AdminSectionTitle,
+  AdminHeader,
 } from "../../styles/StyledAdminDashboard";
 import {
   ClientTypesListContainer,
@@ -25,8 +26,15 @@ import { Colors } from "../../styles/colors";
 import Expander from "../Expander/Expander";
 
 import { AdminSection, Pages } from "../../data/constants"; // No need for ProfilazioneClientiSubSection here
-
+import { StatsGridContainer } from "../Stats/StyledStatCards";
 import useClients from "../../hooks/useClients";
+import TotalRegisteredClientsCard from "../Stats/ClientsStats/TotalRegisteredClientsCard";
+import NewClientsCountCard from "../Stats/ClientsStats/NewClientsCountCard";
+import ReturningClientsPercentageCard from "../Stats/ClientsStats/ReturningClientsPercentageCard";
+import AverageCustomerSpendCard from "../Stats/ClientsStats/AverageCustomerSpendCard";
+import ClientsByTypeDistributionCard from "../Stats/ClientsStats/ClientsByTypeDistributionCard";
+import SalesSeasonalityCard from "../Stats/ProducPromotionStats/SalesSeasonalityCard";
+
 
 const ClientList = ({ setActiveSection }) => {
   // Keep setActiveSection as a prop
@@ -86,6 +94,14 @@ const ClientList = ({ setActiveSection }) => {
 
   return (
     <ClientTypesListContainer>
+      <StatsGridContainer>
+        <TotalRegisteredClientsCard />
+        <NewClientsCountCard />
+        <ReturningClientsPercentageCard />
+        <AverageCustomerSpendCard />
+        <SalesSeasonalityCard />
+        <ClientsByTypeDistributionCard />
+      </StatsGridContainer>
       <AdminSectionControls>
         <AdminActionButton
           onClick={() =>
@@ -126,9 +142,9 @@ const ClientList = ({ setActiveSection }) => {
         >
           Resetta Ricerca
         </AdminActionButton>
-        <AdminActionButton onClick={handleNewClient}>
+        {/* <AdminActionButton onClick={handleNewClient}>
           Nuovo Cliente
-        </AdminActionButton>
+        </AdminActionButton> */}
       </AdminSectionControls>
 
       <AdminSectionTitle>Elenco Clienti</AdminSectionTitle>
@@ -233,7 +249,9 @@ const ClientList = ({ setActiveSection }) => {
                 )}
               </ClientTypesTableCell>
               <ClientTypesTableCell data-label="Azione">
-                <AdminActionButton onClick={(e) => handleClientClick(client.documentId, e)}>
+                <AdminActionButton
+                  onClick={(e) => handleClientClick(client.documentId, e)}
+                >
                   Vedi Dettagli
                 </AdminActionButton>
               </ClientTypesTableCell>
