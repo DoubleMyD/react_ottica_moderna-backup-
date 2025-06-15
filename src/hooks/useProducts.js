@@ -2,8 +2,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { STRAPI_BASE_API_URL } from "../data/api";
 import { buildQueryStringV5 } from "../utils/buildQueryString";
+import { useAuth } from "./authContext";
+import { Role } from "../data/constants";
 
 const useProducts = (filters = {}) => {
+  const { role, authToken } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,6 +30,15 @@ const useProducts = (filters = {}) => {
           immagine: {
             fields: ["name", "alternativeText", "width", "height", "url"],
           },
+          tipologia_clientes: {
+            fields: [
+              "nome",
+              "descrizione",
+              "tratti_caratteristici",
+              "id",
+              "documentId",
+            ],
+          },
         },
         fields: [
           "nome",
@@ -41,12 +53,17 @@ const useProducts = (filters = {}) => {
       };
       const queryString = buildQueryStringV5(queryParams);
 
-      console.log(
-        `[useProducts] Fetching ALL products for local filtering (once): ${STRAPI_BASE_API_URL}/prodottos?${queryString}`
-      );
+      // Dynamically create headers based on user role
+      const requestHeaders = {};
+      if (role === Role.ADMIN && authToken) {
+        requestHeaders.Authorization = `Bearer ${authToken}`;
+      }
 
       const response = await fetch(
-        `${STRAPI_BASE_API_URL}/prodottos?${queryString}`
+        `${STRAPI_BASE_API_URL}/prodottos?${queryString}`,
+        {
+          headers: requestHeaders,
+        }
       );
 
       if (!response.ok) {
@@ -58,7 +75,7 @@ const useProducts = (filters = {}) => {
       }
 
       const data = await response.json();
-
+      console.log("Product data", data);
       const formattedAllProducts = Array.isArray(data.data)
         ? data.data.map((item) => ({
             id: item.id,
@@ -83,9 +100,6 @@ const useProducts = (filters = {}) => {
       setAvailableTypes(Array.from(allTypesFromData).sort());
 
       setInitialDataFetched(true);
-      console.log(
-        `[useProducts] All products fetched and stored in ref. Total: ${allProductsDataRef.current.length} items.`
-      );
     } catch (err) {
       console.error(
         "[useProducts] Error fetching all products for local filtering:",
@@ -110,15 +124,11 @@ const useProducts = (filters = {}) => {
   // --- Function 2: Apply local filters, sort, and paginate (runs on filter changes or initial data ready) ---
   const applyLocalFilters = useCallback(() => {
     if (!initialDataFetched) {
-      console.log(
-        "[useProducts - applyLocalFilters] Skipping: Initial data not yet fetched."
-      );
+      
       return;
     }
     if (error) {
-      console.log(
-        "[useProducts - applyLocalFilters] Skipping: Initial data fetch had an error."
-      );
+      
       return;
     }
 

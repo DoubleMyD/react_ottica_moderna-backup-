@@ -49,6 +49,7 @@ const useGeneralFAQs = () => {
       }
 
       const data = await response.json();
+      console.log("General Faqs: ", faqs);
       setFaqs(data.data || []);
     } catch (err) {
       console.error("Error fetching general FAQs:", err);

@@ -55,7 +55,6 @@ const ProductDetailPage = () => {
     error: promotionsError,
   } = useProductPromotions(documentId);
 
-  console.log("Internal Product Promotions : ", promotions);
   // --- Use the new custom hook to fetch FAQs ---
   const {
     faqs, // This now holds the array of FAQ entries

@@ -128,7 +128,7 @@ const PromotionDetailPage = () => {
         ) : (
           <ProductGrid>
             {dettaglio_promozionis.map((dettaglio) => {
-              const product = dettaglio.prodotto; // Direct access to populated product
+              const product = dettaglio.prodottos[0]; // Direct access to populated product
               if (!product) return null; // Skip if product data is missing
 
               const imageUrl = product.immagine?.url || `https://placehold.co/150x150/CCCCCC/333333?text=No+Image`;

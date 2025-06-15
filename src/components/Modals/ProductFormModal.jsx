@@ -1,5 +1,5 @@
 // src/components/Admin/Product/ProductFormModal.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react"; // Added useMemo
 import {
   ModalOverlay,
   ModalContent,
@@ -12,9 +12,19 @@ import {
   SubmitButton,
   CancelButton,
   ErrorMessage,
-} from "./StyledProductFormModal"; // This file will be renamed in the next step
-import { STRAPI_BASE_API_URL, STRAPI_BASE_URL } from "../../data/api"; // Ensure STRAPI_BASE_URL is here
+  
+} from "../../styles/Modals/StyledProductFormModal"; // Assuming these styles are available or will be moved here
+import {// Imported from StyledCreateCampaignModal for SelectTagsContainer, SelectedTag, SectionTitle
+  SelectTagsContainer,
+  SelectedTag,
+  SectionTitle} from "../../styles/Modals/StyledCreateCampaignModal";
+
+import { STRAPI_BASE_API_URL, STRAPI_BASE_URL } from "../../data/api";
 import { useAuth } from "../../hooks/authContext";
+import useClientTypes from "../../hooks/useClientTypes"; // Import useClientTypes
+
+// Import PRODUCT_CATEGORIES from constants file
+import { PRODUCT_CATEGORIES } from "../../data/constants"; // Assuming this path is correct
 
 const ProductFormModal = ({
   isOpen,
@@ -27,52 +37,71 @@ const ProductFormModal = ({
     nome: "",
     quantita_disponibili: "",
     prezzo_unitario: "",
-    tipologia: "",
+    tipologia: "", // Will be selected from dropdown (string value)
     descrizione: "",
     brand: "",
   });
   const [imageFile, setImageFile] = useState(null); // For new image upload
   const [imagePreview, setImagePreview] = useState(null); // For image preview (new or existing)
   const [existingImageId, setExistingImageId] = useState(null); // To keep track of Strapi ID of existing image
+  const [selectedClientTypeIds, setSelectedClientTypeIds] = useState([]); // Stores Strapi internal IDs of client types
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const isEditMode = initialData !== null;
 
+  // Fetch all client types to populate the "Tipologie Clienti Associate" dropdown
+  const clientTypeFilterOptions = useMemo(() => ({}), []); // No specific filters needed for this list
+  const {
+    clientTypes: availableClientTypes,
+    loading: clientTypesLoading,
+    error: clientTypesError,
+  } = useClientTypes(clientTypeFilterOptions);
+
   // Effect to populate form when initialData changes (for edit mode)
+  // or reset for create mode when modal opens
   useEffect(() => {
-    if (isOpen && isEditMode && initialData) {
-      setFormData({
-        nome: initialData.nome || "",
-        quantita_disponibili: initialData.quantita_disponibili || "",
-        prezzo_unitario: initialData.prezzo_unitario || "",
-        tipologia: initialData.tipologia || "",
-        descrizione: initialData.descrizione || "",
-        brand: initialData.brand || "",
-      });
-      // Set existing image for preview and ID
-      if (initialData.immagine && initialData.immagine.url) {
-        setImagePreview(`${STRAPI_BASE_URL}${initialData.immagine.url}`); // Use full URL for preview
-        setExistingImageId(initialData.immagine.id); // Store the ID of the existing image
+    if (isOpen) {
+      setError(null); // Clear any previous errors
+
+      if (isEditMode && initialData) {
+        setFormData({
+          nome: initialData.nome || "",
+          quantita_disponibili: initialData.quantita_disponibili || "",
+          prezzo_unitario: initialData.prezzo_unitario || "",
+          tipologia: initialData.tipologia || "", // Set existing string tipologia
+          descrizione: initialData.descrizione || "",
+          brand: initialData.brand || "",
+        });
+        // Set existing image for preview and ID
+        if (initialData.immagine && initialData.immagine.url) {
+          setImagePreview(`${STRAPI_BASE_URL}${initialData.immagine.url}`); // Use full URL for preview
+          setExistingImageId(initialData.immagine.id); // Store the ID of the existing image
+        } else {
+          setImagePreview(null);
+          setExistingImageId(null);
+        }
+
+        // Populate selected client types for the product
+        // InitialData.tipologia_clientes might be an array of objects with { id, nome, documentId }
+        const initialClientTypeIds =
+          initialData.tipologia_clientes?.map((tc) => tc.id) || [];
+        setSelectedClientTypeIds(initialClientTypeIds);
       } else {
+        // Reset form for create mode
+        setFormData({
+          nome: "",
+          quantita_disponibili: "",
+          prezzo_unitario: "",
+          tipologia: "",
+          descrizione: "",
+          brand: "",
+        });
+        setImageFile(null);
         setImagePreview(null);
         setExistingImageId(null);
+        setSelectedClientTypeIds([]); // Reset selected client types
       }
-      setError(null); // Clear any previous errors
-    } else if (isOpen && !isEditMode) {
-      // Reset form for create mode when modal opens
-      setFormData({
-        nome: "",
-        quantita_disponibili: "",
-        prezzo_unitario: "",
-        tipologia: "",
-        descrizione: "",
-        brand: "",
-      });
-      setImageFile(null);
-      setImagePreview(null);
-      setExistingImageId(null);
-      setError(null);
     }
   }, [isOpen, initialData, isEditMode]); // Re-run when modal opens or initialData changes
 
@@ -109,6 +138,18 @@ const ProductFormModal = ({
     }
   };
 
+  const handleClientTypeSelect = (e) => {
+    const selectedId = parseFloat(e.target.value); // Ensure ID is a number
+    if (!isNaN(selectedId) && !selectedClientTypeIds.includes(selectedId)) {
+      setSelectedClientTypeIds((prev) => [...prev, selectedId]);
+    }
+    e.target.value = ""; // Reset dropdown
+  };
+
+  const handleRemoveClientType = (idToRemove) => {
+    setSelectedClientTypeIds((prev) => prev.filter((id) => id !== idToRemove));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -120,12 +161,64 @@ const ProductFormModal = ({
       return;
     }
 
+    // --- Validation ---
+    const requiredFields = [
+      "nome",
+      "quantita_disponibili",
+      "prezzo_unitario",
+      "tipologia",
+      "descrizione",
+      "brand",
+    ];
+    for (const field of requiredFields) {
+      // Check if the field is empty or contains only whitespace for strings
+      if (
+        !formData[field] ||
+        (typeof formData[field] === "string" && formData[field].trim() === "")
+      ) {
+        setError(`Il campo '${field}' è obbligatorio.`);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Specific validation for numbers
+    if (
+      isNaN(formData.quantita_disponibili) ||
+      formData.quantita_disponibili < 0
+    ) {
+      setError("La 'Quantità Disponibile' deve essere un numero non negativo.");
+      setLoading(false);
+      return;
+    }
+    if (isNaN(formData.prezzo_unitario) || formData.prezzo_unitario <= 0) {
+      setError("Il 'Prezzo Unitario' deve essere un numero positivo.");
+      setLoading(false);
+      return;
+    }
+
+    // Image validation (required for new product, optional for edit if already exists)
+    if (!isEditMode && !imageFile) {
+      setError("L'immagine del prodotto è obbligatoria per un nuovo prodotto.");
+      setLoading(false);
+      return;
+    }
+    if (isEditMode && !imageFile && !existingImageId) {
+      // This case means it's an edit, no new file, and no existing image, implying removal
+      // If user explicitly removed it, and it's allowed, then it's fine.
+      // For now, if no image is present in edit mode, it's an error as per the prompt.
+      setError(
+        "Per la modifica, è richiesta un'immagine o deve essere mantenuta quella esistente."
+      );
+      setLoading(false);
+      return;
+    }
+
     let finalImageId = existingImageId; // Start with existing image ID
 
     try {
       // Step 1: Handle Image Upload/Retention
       if (imageFile) {
-        // If a new file is selected, upload it
         const imageFormData = new FormData();
         imageFormData.append("files", imageFile);
 
@@ -146,28 +239,30 @@ const ProductFormModal = ({
         }
         const uploadedImages = await uploadResponse.json();
         if (uploadedImages && uploadedImages.length > 0) {
-          finalImageId = uploadedImages[0].id; // Use new image ID
+          finalImageId = uploadedImages[0].id;
         } else {
-          finalImageId = null; // No image uploaded, or upload failed to return ID
+          finalImageId = null;
         }
       } else if (imagePreview === null && existingImageId) {
-        // If image was cleared by user (imagePreview is null) but there was an existing image,
-        // it means user wants to remove the image. So set finalImageId to null.
-        finalImageId = null;
+        finalImageId = null; // Image was explicitly cleared by the user
       }
-      // If imageFile is null AND imagePreview is not null AND existingImageId is not null,
-      // it means user kept the existing image, so finalImageId remains existingImageId.
+
+      // Prepare tipologia_clientes payload
+      const tipologiaClientesPayload = selectedClientTypeIds.map((id) => ({
+        id,
+      }));
 
       // Step 2: Create or Update Product Entry
       const method = isEditMode ? "PUT" : "POST";
       const url = isEditMode
-        ? `${STRAPI_BASE_API_URL}/prodottos/${initialData.documentId}` // Use Strapi internal ID for PUT
+        ? `${STRAPI_BASE_API_URL}/prodottos/${initialData.documentId}` // Use documentId for PUT
         : `${STRAPI_BASE_API_URL}/prodottos`;
 
       const productPayload = {
         data: {
           ...formData,
           immagine: finalImageId ? [finalImageId] : null, // Link image by ID
+          tipologia_clientes: tipologiaClientesPayload, // Add selected client types
         },
       };
 
@@ -197,7 +292,7 @@ const ProductFormModal = ({
       );
       alert(`Prodotto ${isEditMode ? "aggiornato" : "creato"} con successo!`);
 
-      onSuccess(); // Callback to parent to close modal and refresh list
+      onSuccess();
     } catch (err) {
       console.error("Errore operazione prodotto:", err);
       setError(err.message);
@@ -237,6 +332,7 @@ const ProductFormModal = ({
               value={formData.quantita_disponibili}
               onChange={handleChange}
               required
+              min="0"
             />
           </FormGroup>
           <FormGroup>
@@ -249,18 +345,25 @@ const ProductFormModal = ({
               onChange={handleChange}
               step="0.01"
               required
+              min="0.01"
             />
           </FormGroup>
           <FormGroup>
             <label htmlFor="tipologia">Tipologia:</label>
-            <input
-              type="text"
+            <select
               id="tipologia"
               name="tipologia"
               value={formData.tipologia}
               onChange={handleChange}
               required
-            />
+            >
+              <option value="">Seleziona una tipologia</option>
+              {PRODUCT_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
           </FormGroup>
           <FormGroup>
             <label htmlFor="descrizione">Descrizione:</label>
@@ -270,6 +373,7 @@ const ProductFormModal = ({
               value={formData.descrizione}
               onChange={handleChange}
               rows="4"
+              required
             ></textarea>
           </FormGroup>
           <FormGroup>
@@ -283,6 +387,54 @@ const ProductFormModal = ({
               required
             />
           </FormGroup>
+
+          {/* New Section for Tipologie Clienti Associate */}
+          <SectionTitle>Tipologie Clienti Associate</SectionTitle>
+          <FormGroup>
+            <label htmlFor="clientTypesSelect">Seleziona Tipologie:</label>
+            {clientTypesLoading ? (
+              <p>Caricamento tipologie clienti...</p>
+            ) : clientTypesError ? (
+              <p style={{ color: "red" }}>
+                Errore caricamento tipologie: {clientTypesError}
+              </p>
+            ) : (
+              <SelectTagsContainer>
+                {selectedClientTypeIds.map((id) => {
+                  const type = availableClientTypes.find((ct) => ct.id === id);
+                  return (
+                    <SelectedTag key={id}>
+                      {type ? type.nome : `ID: ${id}`}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveClientType(id)}
+                      >
+                        &times;
+                      </button>
+                    </SelectedTag>
+                  );
+                })}
+                <select
+                  id="clientTypesSelect"
+                  onChange={handleClientTypeSelect}
+                  value="" // Always keep value="" to show "Aggiungi Tipologia"
+                >
+                  <option value="" disabled>
+                    Aggiungi Tipologia
+                  </option>
+                  {availableClientTypes.map(
+                    (type) =>
+                      !selectedClientTypeIds.includes(type.id) && ( // Only show unselected types
+                        <option key={type.id} value={type.id}>
+                          {type.nome}
+                        </option>
+                      )
+                  )}
+                </select>
+              </SelectTagsContainer>
+            )}
+          </FormGroup>
+
           <FileInputContainer>
             <label htmlFor="immagine">Immagine Prodotto:</label>
             <input
@@ -293,7 +445,11 @@ const ProductFormModal = ({
               onChange={handleFileChange}
             />
             <label htmlFor="immagine" className="custom-file-input">
-              {imagePreview ? "Cambia Immagine" : "Scegli Immagine"}
+              {imageFile
+                ? "Cambia Immagine"
+                : imagePreview
+                ? "Cambia Immagine"
+                : "Scegli Immagine"}
             </label>
             {imageFile && <span className="file-name">{imageFile.name}</span>}
             {imagePreview && (
@@ -305,6 +461,8 @@ const ProductFormModal = ({
                     setImageFile(null);
                     setImagePreview(null);
                     setExistingImageId(null);
+                    const fileInput = document.getElementById("immagine");
+                    if (fileInput) fileInput.value = "";
                   }}
                   style={{
                     background: "none",

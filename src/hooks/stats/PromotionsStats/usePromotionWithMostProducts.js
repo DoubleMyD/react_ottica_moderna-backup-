@@ -27,7 +27,7 @@ const usePromotionWithMostProducts = () => {
         populate: {
           dettaglio_promozionis: {
             populate: {
-              prodotto: { // Ensure product is populated to confirm it's linked
+              prodottos: { // Ensure product is populated to confirm it's linked
                 fields: ["id"], // Minimal field to confirm product presence
               },
             },

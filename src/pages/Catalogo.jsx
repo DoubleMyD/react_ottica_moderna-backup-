@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import ElencoProdotti from "../components/ElencoProdotti/ElencoProdotti";
 import CatalogoFilter from "../components/FilterCatalogo/FilterCatalogo";
-import useProducts from "../hooks/useProduct"; // Assuming this is the hook with the JSON.stringify fix
+import useProducts from "../hooks/useProducts"; // Assuming this is the hook with the JSON.stringify fix
 
 const CatalogoPage = ({
   isAdminView = false, // Default to false for the general catalog
   onEditProduct, // Will likely be undefined or a no-op for the public catalog
-  onDeleteProduct, // Will likely be undefined or a no-op for the public catalog
+  onDeleteProduct: onDeleteProductSuccess, // Will likely be undefined or a no-op for the public catalog
 }) => {
   const [filters, setFilters] = useState({
     prezzoMassimo: "",
@@ -14,11 +14,6 @@ const CatalogoPage = ({
     tipologie: [],
     brands: [],
   });
-
-  // This useEffect will now correctly log ONLY when the 'filters' object's content (or its reference) actually changes
-  useEffect(() => {
-    console.log(`[CatalogoPage] Filters state updated:`, filters);
-  }, [filters]);
 
   // The useProducts hook now uses JSON.stringify(filters) in its dependencies,
   // so it will only re-run when the content of 'filters' changes.
@@ -97,7 +92,7 @@ const CatalogoPage = ({
             products={products}
             isAdminView={isAdminView}
             onEditProduct={onEditProduct}
-            onDeleteProduct={onDeleteProduct}
+            onDeleteProduct={onDeleteProductSuccess}
           />
         )}
       </div>

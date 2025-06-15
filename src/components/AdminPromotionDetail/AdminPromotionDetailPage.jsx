@@ -18,6 +18,7 @@ import {
   AddProductButton,
   PlaceholderText,
 } from "./StyledAdminPromotionDetailPage"; // Your new styled components
+
 import { formatItalianDate } from "../../utils/formatters"; // Re-use formatter
 import ElencoProdotti from "../ElencoProdotti/ElencoProdotti";
 import { AdminSection, Pages } from "../../data/constants";
@@ -33,14 +34,13 @@ import PromotionUniqueProductsCard from "../Stats/SinglePromotionStats/Promotion
 import PromotionAverageDiscountCard from "../Stats/SinglePromotionStats/PromotionAverageDiscountCard";
 import PromotionDaysRemainingCard from "../Stats/SinglePromotionStats/PromotionDaysRemainingCard";
 import PromotionMostActiveClientTypeCard from "../Stats/SinglePromotionStats/PromotionMostActiveClientTypeCard";
-import MostSoldProductCard from "../Stats/ProducPromotionStats/MostSoldProductCard";
-import MostProfitableProductTypeCard from "../Stats/ProducPromotionStats/MostProfitableProductTypeCard";
-import TopContributingBrandCard from "../Stats/ProducPromotionStats/TopContributingBrandCard";
-import SalesSeasonalityCard from "../Stats/ProducPromotionStats/SalesSeasonalityCard";
-import PromotionUsageRateCard from "../Stats/ProducPromotionStats/PromotionUsageRateCard";
+
 import StartCampaignButton from "../AdminPromotionalCampaign/StartCampaignButton";
 import CampaignConfirmationModal from "../Modals/CampaignConfirmationModal";
-
+import CampaignFormModal from "../Admin/Marketing/CampaignFormModal";
+import { AdminActionButton } from "../ElencoProdotti/StyledElencoProdotti";
+import EditPromotionButton from "../Admin/Marketing/EditPromotionButton";
+import DeletePromotionButton from "../Admin/Marketing/DeletePromotionButton";
 
 // A dedicated container for the single promotion stats grid
 const PromotionStatsGridContainer = styled.div`
@@ -74,19 +74,30 @@ const AdminPromotionDetailPage = () => {
     usedCount,
     loading: usageStatsLoading,
     error: usageStatsError,
-    refetchUsageStats,
+    refetch: refetchUsageStats,
   } = usePromotionUsageStats(promotion?.id); // Pass promotion.id only when available
 
-  // State for the confirmation modal
+  // State for the launch confirmation modal
   const [isCampaignConfirmationModalOpen, setIsCampaignConfirmationModalOpen] = useState(false);
+  // NEW: State for the edit form modal
+  const [isEditCampaignModalOpen, setIsEditCampaignModalOpen] = useState(false);
 
   const handleGoBack = () => {
     navigate(-1);
   };
 
   const handleAddProduct = () => {
-    alert("Funzione 'Aggiungi Prodotto' non implementata!");
+    handleEditCampaign();
     // Example: navigate('/admin/products/add-to-promotion', { state: { promotionId: promotion?.id } });
+  };
+
+  // Handler to open the EDIT campaign modal
+  const handleEditCampaign = () => {
+    if (promotion) {
+      setIsEditCampaignModalOpen(true);
+    } else {
+      alert("Impossibile modificare la campagna: dati non caricati.");
+    }
   };
 
   // New handler for clicking on an associated client type
@@ -108,15 +119,16 @@ const AdminPromotionDetailPage = () => {
     }
   };
 
-  // Callback when campaign email sending is successful
-  const handleCampaignSentSuccess = () => {
-    setIsCampaignConfirmationModalOpen(false); // Close the modal
-    alert("Campagna avviata con successo!");
-    // After campaign is sent, refresh usage stats to see updated "sent" count
-    refetchUsageStats();
-    // Potentially refetch promotion details if any fields related to campaign status are added
-    refetchPromotionDetails();
+  // Callback when campaign update is successful
+  const handleCampaignUpdateSuccess = () => {
+    setIsEditCampaignModalOpen(false); // Close the edit modal
+    alert("Campagna aggiornata con successo!");
+    refetchPromotionDetails(); // Refresh details on page
   };
+
+  const handleCampaignDeleteSuccess = () => {
+    navigate(-1);
+  }
 
 
   if (loading || usageStatsLoading) {
@@ -177,6 +189,28 @@ const AdminPromotionDetailPage = () => {
   return (
     <PromotionDetailContainer>
       <BackArrowButton onClick={handleGoBack}>&larr;</BackArrowButton>
+      <div
+        style={{
+          display: "flex",
+
+          justifyContent: "flex-end",
+
+          marginBottom: "20px",
+
+          gap: "20px",
+        }}
+      >
+        <EditPromotionButton
+          promotion={promotion}
+          onEditSuccess={handleCampaignUpdateSuccess}
+          showText={false}
+        />
+        {console.log("promo" , promotion)}
+        <DeletePromotionButton
+          promotion={promotion}
+          onDeleteSuccess={handleCampaignDeleteSuccess}
+        />
+      </div>
 
       <PromotionHeaderGrid>
         {/* Left Column - Title, Dates, Description */}
@@ -223,7 +257,9 @@ const AdminPromotionDetailPage = () => {
                 {involvedClientTypes.map((type) => (
                   <ClientTypeTag
                     key={type.id}
-                    onClick={(e) => handleAssociatedTypeClick(type.documentId, e)}
+                    onClick={(e) =>
+                      handleAssociatedTypeClick(type.documentId, e)
+                    }
                   >
                     {type.nome}
                   </ClientTypeTag>
@@ -245,18 +281,24 @@ const AdminPromotionDetailPage = () => {
       </PromotionHeaderGrid>
 
       {/* Button to start campaign - Conditionally rendered based on promotion activity */}
-      {isPromotionActive ? (
+      {(isPromotionActive && involvedClientTypes.length > 0) ? (
         <StartCampaignButton
           onClick={handleStartCampaignClick}
           // Disable button if modal is open to prevent double clicks/conflicts
-          disabled={isCampaignConfirmationModalOpen}
+          disabled={isCampaignConfirmationModalOpen || isEditCampaignModalOpen}
         />
       ) : (
-        <p style={{ textAlign: 'center', marginTop: '20px', color: Colors.mediumGray, fontWeight: 'bold' }}>
+        <p
+          style={{
+            textAlign: "center",
+            marginTop: "20px",
+            color: Colors.mediumGray,
+            fontWeight: "bold",
+          }}
+        >
           La promozione non è attiva in questo momento (fuori data).
         </p>
       )}
-
 
       {/* Stats specific to this single promotion */}
       {/* Pass strapiPromotionId to each new stat card */}
@@ -277,19 +319,10 @@ const AdminPromotionDetailPage = () => {
             isInPromotionContext={true} // Indicate that products are shown within a promotion context
           />
         </ProductListContainer>
-        <AddProductButton onClick={handleAddProduct}>
+        {/* <AddProductButton onClick={handleAddProduct}>
           AGGIUNGI PRODOTTO
-        </AddProductButton>
+        </AddProductButton> */}
       </ProductsSection>
-
-      {/* Campaign Confirmation Modal */}
-      <CampaignConfirmationModal
-        isOpen={isCampaignConfirmationModalOpen}
-        onClose={() => setIsCampaignConfirmationModalOpen(false)} // Close handler for modal
-        promotion={promotion} // Pass the full promotion object
-        involvedProducts={involvedProducts} // Pass involved products for email content
-        onCampaignSentSuccess={handleCampaignSentSuccess} // Callback for success
-      />
     </PromotionDetailContainer>
   );
 };

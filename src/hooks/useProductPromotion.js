@@ -40,7 +40,7 @@ const useProductPromotions = (documentId) => {
           dettaglio_promozionis: {
             populate: {
               // And within each 'dettaglio_promozioni', we populate the 'promozione' itself
-              promozione: {
+              promoziones: {
                 fields: [
                   "titolo",
                   "descrizione",
@@ -81,7 +81,7 @@ const useProductPromotions = (documentId) => {
 
       if (productData && productData.dettaglio_promozionis) {
         productData.dettaglio_promozionis.forEach((dettaglio_promozione) => {
-          const promotion = dettaglio_promozione.promozione;
+          const promotion = dettaglio_promozione.promoziones[0];
 
           if (promotion) {
             // Check if this promotion ID has already been added to our map

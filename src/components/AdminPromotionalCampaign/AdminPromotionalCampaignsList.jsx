@@ -22,6 +22,7 @@ import { StatsGridContainer } from "../Stats/StyledStatCards";
 import { AdminSection, Pages } from "../../data/constants";
 import usePromotions from "../../hooks/usePromotions";
 import { formatItalianDate } from "../../utils/formatters";
+
 import TotalActivePromotionsCard from "../Stats/PromotionsStats/TotalActivePromotionsCard";
 import AvgClientsPerPromotionCard from "../Stats/PromotionsStats/AvgClientsPerPromotionCard";
 import PromotionWithMostProductsCard from "../Stats/PromotionsStats/PromotionWithMostProductsCard";
@@ -30,26 +31,22 @@ import PromotionsByClientTypeDistributionCard from "../Stats/PromotionsStats/Pro
 
 // Import the new modals
 import CampaignConfirmationModal from "../../components/Modals/CampaignConfirmationModal";
-import CreateCampaignModal from "../../components/Modals/CreateCampaignModal"; // NEW: Import the CreateCampaignModal
+import CampaignFormModal from "../Admin/Marketing/CampaignFormModal";
 import usePromotionDetail from "../../hooks/usePromotionDetail";
+import EditPromotionButton from "../Admin/Marketing/EditPromotionButton";
+import DeletePromotionButton from "../Admin/Marketing/DeletePromotionButton";
 
 const PromotionalCampaignsList = () => {
   const navigate = useNavigate();
 
-  // State for the general list of promotions
   const { promotions, loading, error, refetchPromotions } = usePromotions();
 
-  // State to manage the confirmation modal
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
-  // State to store the documentId of the promotion being launched
-  const [promotionDocumentIdToLaunch, setPromotionDocumentIdToLaunch] = useState(null);
+  const [promotionDocumentIdToLaunch, setPromotionDocumentIdToLaunch] =
+    useState(null);
+  const [isCreateCampaignModalOpen, setIsCreateCampaignModalOpen] =
+    useState(false);
 
-  // State to manage the CREATE campaign modal
-  const [isCreateCampaignModalOpen, setIsCreateCampaignModalOpen] = useState(false);
-
-
-  // Use usePromotionDetail to fetch the full data for the *selected* promotion for the launch modal
-  // This will only run if promotionDocumentIdToLaunch is not null
   const {
     promotion: detailedPromotion,
     involvedProducts: detailedInvolvedProducts,
@@ -57,44 +54,47 @@ const PromotionalCampaignsList = () => {
     error: detailError,
   } = usePromotionDetail(promotionDocumentIdToLaunch);
 
-  const handleAssociatedTypeClick = (typeId, event) => { // Use typeDocumentId for navigation
+  const handleAssociatedTypeClick = (typeDocumentId, event) => {
     event.stopPropagation();
     navigate(
-      `?section=${AdminSection.Profilazione_TipologieCliente}&typeId=${typeId}`
+      `?section=${AdminSection.Profilazione_TipologieCliente}&typeId=${typeDocumentId}`
     );
   };
 
   const handleNewCampaign = () => {
-    setIsCreateCampaignModalOpen(true); // Open the create campaign modal
+    setIsCreateCampaignModalOpen(true);
   };
 
   const handleCreateCampaignSuccess = () => {
-    setIsCreateCampaignModalOpen(false); // Close modal
-    refetchPromotions(); // Refresh list to show new campaign
-    alert("Nuova campagna creata con successo!");
+    setIsCreateCampaignModalOpen(false);
+    refetchPromotions();
+    // alert("Nuova campagna creata con successo!"); // Alert is now handled inside CampaignFormModal
   };
 
-  // This handler will now open the confirmation modal for launching an existing campaign
   const handleLaunchCampaign = (promotionDocumentId) => {
-    setPromotionDocumentIdToLaunch(promotionDocumentId); // Set the ID of the promotion to load its details
-    setIsConfirmationModalOpen(true); // Open the modal
+    setPromotionDocumentIdToLaunch(promotionDocumentId);
+    setIsConfirmationModalOpen(true);
   };
 
-  // Callback when campaign email sending is successful
   const handleCampaignSentSuccess = () => {
-    setIsConfirmationModalOpen(false); // Close the modal
-    setPromotionDocumentIdToLaunch(null); // Clear the selected promotion
+    setIsConfirmationModalOpen(false);
+    setPromotionDocumentIdToLaunch(null);
     alert("Campagna avviata con successo!");
-    refetchPromotions(); // Re-fetch the list of promotions to update usage stats
+    refetchPromotions();
   };
 
   const handleConfirmationModalClose = () => {
     setIsConfirmationModalOpen(false);
-    setPromotionDocumentIdToLaunch(null); // Clear selected promotion when modal closes
+    setPromotionDocumentIdToLaunch(null);
   };
 
   const handleCreateCampaignModalClose = () => {
     setIsCreateCampaignModalOpen(false);
+  };
+
+  // Callback for edit/delete success, simply refetch the list
+  const handleActionSuccess = () => {
+    refetchPromotions();
   };
 
   const handleViewDetailCampaign = (campaignDocumentId) => {
@@ -112,7 +112,9 @@ const PromotionalCampaignsList = () => {
   if (error) {
     return (
       <CampaignsContainer>
-        <PlaceholderText style={{ color: "red" }}>Errore: {error}</PlaceholderText>
+        <PlaceholderText style={{ color: "red" }}>
+          Errore: {error}
+        </PlaceholderText>
       </CampaignsContainer>
     );
   }
@@ -147,7 +149,7 @@ const PromotionalCampaignsList = () => {
             const startDate = new Date(campaign.data_inizio);
             const endDate = new Date(campaign.data_fine);
             const isCampaignActive = startDate <= now && endDate >= now;
-            
+
             return (
               <CampaignCard key={campaign.id}>
                 <CampaignTitle>{campaign.titolo}</CampaignTitle>
@@ -174,7 +176,9 @@ const PromotionalCampaignsList = () => {
                       {campaign.tipologia_clientes.map((type) => (
                         <ClientTypeTag
                           key={type.id}
-                          onClick={(e) => handleAssociatedTypeClick(type.id, e)} // Use documentId
+                          onClick={(e) =>
+                            handleAssociatedTypeClick(type.documentId, e)
+                          }
                         >
                           {type.nome}
                         </ClientTypeTag>
@@ -191,16 +195,30 @@ const PromotionalCampaignsList = () => {
                 <CampaignActionsWrapper>
                   <CampaignActionButton
                     $secondary
-                    onClick={() => handleViewDetailCampaign(campaign.documentId)}
+                    onClick={() =>
+                      handleViewDetailCampaign(campaign.documentId)
+                    }
                   >
                     Dettagli
                   </CampaignActionButton>
                   <CampaignActionButton
                     onClick={() => handleLaunchCampaign(campaign.documentId)}
-                    disabled={!isCampaignActive || isConfirmationModalOpen} // Disable if not active or launch modal is open
+                    disabled={!isCampaignActive || isConfirmationModalOpen}
                   >
                     {isCampaignActive ? "AVVIA" : "NON ATTIVA"}
                   </CampaignActionButton>
+                </CampaignActionsWrapper>
+                {/* NEW: Reusable Edit and Delete Buttons */}
+                <CampaignActionsWrapper>
+                  <EditPromotionButton
+                    promotion={campaign}
+                    onEditSuccess={handleActionSuccess}
+                    showText={false}
+                  />
+                  <DeletePromotionButton
+                    promotion={campaign}
+                    onDeleteSuccess={handleActionSuccess}
+                  />
                 </CampaignActionsWrapper>
               </CampaignCard>
             );
@@ -219,12 +237,13 @@ const PromotionalCampaignsList = () => {
         />
       )}
 
-      {/* NEW: Create Campaign Modal */}
+      {/* Create Campaign Modal */}
       {isCreateCampaignModalOpen && (
-        <CreateCampaignModal
+        <CampaignFormModal
           isOpen={isCreateCampaignModalOpen}
           onClose={handleCreateCampaignModalClose}
-          onCreateSuccess={handleCreateCampaignSuccess}
+          onSuccess={handleCreateCampaignSuccess}
+          initialData={null} // Ensure it's in create mode
         />
       )}
     </CampaignsContainer>

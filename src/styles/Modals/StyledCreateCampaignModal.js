@@ -1,6 +1,6 @@
 // src/styles/Admin/Marketing/StyledCreateCampaignModal.js
 import styled from "styled-components";
-import { Colors } from "../colors";
+import { Colors } from "../colors"; // Ensure this path is correct
 
 export const ModalOverlay = styled.div`
   position: fixed;
@@ -16,28 +16,6 @@ export const ModalOverlay = styled.div`
   backdrop-filter: blur(5px);
 `;
 
-export const ModalContent = styled.div`
-  background-color: ${Colors.background};
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-  width: 90%;
-  max-width: 800px; /* Wider for more complex form */
-  max-height: 90vh; /* Limit height and enable scroll */
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  position: relative;
-  font-family: "Inter", sans-serif;
-  color: ${Colors.darkText};
-
-  @media (max-width: 768px) {
-    padding: 20px;
-    width: 95%;
-  }
-`;
-
 export const ModalHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -45,6 +23,7 @@ export const ModalHeader = styled.div`
   margin-bottom: 10px;
   border-bottom: 1px solid ${Colors.separatorSubtle};
   padding-bottom: 15px;
+  flex-shrink: 0; /* Prevent header from shrinking when space is tight */
 
   h2 {
     font-size: 1.8rem;
@@ -61,16 +40,59 @@ export const CloseButton = styled.button`
   color: ${Colors.mediumGray};
   cursor: pointer;
   transition: color 0.2s ease;
+  flex-shrink: 0; /* Prevent button from shrinking */
 
   &:hover {
     color: ${Colors.accentRed};
   }
 `;
 
+// IMPORTANT: Define ModalForm BEFORE ModalContent
 export const ModalForm = styled.form`
   display: flex;
   flex-direction: column;
+  flex-template-columns: repeat(
+    auto-fit,
+    ${(props) => props.$columnWidth || "250px"}
+      /* Use the prop directly for fixed width */
+  );
   gap: 15px;
+  /* NO overflow-y: auto or max-height here! It's handled by its parent if needed. */
+  /* This component should be the one to grow and scroll if its content exceeds its height */
+`;
+
+export const ModalContent = styled.div`
+  background-color: ${Colors.background};
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh; /* Set the maximum height for the modal */
+
+  display: flex;
+  flex-direction: column; /* Arrange children vertically */
+  position: relative;
+  font-family: "Inter", sans-serif;
+  color: ${Colors.darkText};
+
+  overflow: auto; /* Hide scrollbars on the modal content itself */
+
+  @media (max-width: 768px) {
+    padding: 20px;
+    width: 95%;
+  }
+
+  /* This is the key: Target the actual scrollable part. */
+  /* Now ModalForm is defined, so this selector works */
+  ${ModalForm} {
+    flex-grow: 1; /* Allow the form to take up remaining vertical space */
+    overflow-y: auto; /* Enable scrolling for the form content */
+    overflow-x: auto;
+    padding-right: 15px; /* Add padding to prevent content from hiding under the scrollbar */
+    margin-right: -15px; /* Compensate for the padding-right to keep content aligned */
+    padding-bottom: 20px; /* Add some padding at the bottom of the scrollable area */
+  }
 `;
 
 export const FormGroup = styled.div`
@@ -225,6 +247,7 @@ export const ModalActions = styled.div`
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
+  flex-shrink: 0; /* Prevent actions from shrinking */
 
   button {
     padding: 10px 20px;

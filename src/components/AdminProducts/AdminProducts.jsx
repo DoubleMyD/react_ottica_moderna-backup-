@@ -1,19 +1,17 @@
 // src/components/Admin/Product/AdminProductsSection.jsx
 import React, { useState, useEffect } from "react";
-import ProductFormModal from "../ProductFormModal/ProductFormModal"; // Changed import to ProductFormModal
+import ProductFormModal from "../Modals/ProductFormModal"; // Changed import to ProductFormModal
 import {
   AdminHeader,
   AdminSectionTitle,
   AdminActionButton,
 } from "../../styles/StyledAdminDashboard";
 import {StatsGridContainer} from "../Stats/StyledStatCards"
-import useProducts from "../../hooks/useProduct"; // Your modified useProducts hook
+import useProducts from "../../hooks/useProducts"; // Your modified useProducts hook
 import CatalogoPage from "../../pages/Catalogo";
 import MostSoldProductCard from "../Stats/ProducPromotionStats/MostSoldProductCard";
 import MostProfitableProductTypeCard from "../Stats/ProducPromotionStats/MostProfitableProductTypeCard";
 import TopContributingBrandCard from "../Stats/ProducPromotionStats/TopContributingBrandCard";
-import SalesSeasonalityCard from "../Stats/ProducPromotionStats/SalesSeasonalityCard";
-import PromotionUsageRateCard from "../Stats/ProducPromotionStats/PromotionUsageRateCard";
 
 const AdminProductsSection = () => {
   // Pass an empty filters object as this component doesn't filter by default
@@ -32,7 +30,6 @@ const AdminProductsSection = () => {
   };
 
   const handleFormSuccess = () => {
-    console.log("Product form success (create/update) - Triggering refetch");
     setIsModalOpen(false);
     setEditingProduct(null);
     refetchProducts(); // Refresh the product list after successful creation/update
@@ -40,23 +37,14 @@ const AdminProductsSection = () => {
 
   const handleEditProduct = (productData) => {
     // Now accepts full product data
-    console.log(`Modifica prodotto:`, productData);
     setEditingProduct(productData); // Set the product data to be edited
     setIsModalOpen(true); // Open the modal
   };
 
-  const handleDeleteProduct = (documentId) => {
-    if (
-      window.confirm(
-        `Sei sicuro di voler eliminare il prodotto con Document ID ${documentId}?`
-      )
-    ) {
-      // In a real app, you would make an API call to delete the product
-      // Example: api.deleteProduct(documentId).then(refetchProducts).catch(err => alert('Errore eliminazione: ' + err.message));
-      console.log(`Eliminando prodotto con Document ID: ${documentId}`);
-      alert(`Prodotto con ID ${documentId} eliminato (simulato).`);
-      refetchProducts(); // Simulate refetch after deletion
-    }
+  // The handleDeleteProduct function will now simply call the refetch after deletion
+  // The actual deletion logic and modal are handled by DeleteProductButton
+  const handleDeleteProductSuccess = () => {
+    refetchProducts(); // Refetch the list after a successful deletion
   };
 
   if (loading)
@@ -91,7 +79,7 @@ const AdminProductsSection = () => {
         products={products}
         isAdminView={true}
         onEditProduct={handleEditProduct} // Pass the handleEditProduct function
-        onDeleteProduct={handleDeleteProduct}
+        onDeleteProduct={handleDeleteProductSuccess}
       />
 
       <ProductFormModal

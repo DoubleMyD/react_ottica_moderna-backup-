@@ -48,7 +48,7 @@ export const StatTitle = styled.h3`
   color: ${Colors.mediumGray};
   margin-bottom: 10px;
   font-weight: 600;
-  white-space: nowrap; /* Prevent title from wrapping */
+  
   overflow: hidden;
   text-overflow: ellipsis; /* Add ellipsis if too long */
 

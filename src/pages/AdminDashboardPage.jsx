@@ -46,6 +46,7 @@ import AvgClientsPerPromotionCard from "../components/Stats/PromotionsStats/AvgC
 import PromotionWithMostProductsCard from "../components/Stats/PromotionsStats/PromotionWithMostProductsCard";
 import LongestPromotionCard from "../components/Stats/PromotionsStats/LongestPromotionCard";
 import PromotionsByClientTypeDistributionCard from "../components/Stats/PromotionsStats/PromotionsByClientTypeDistributionCard";
+import { StatsGridContainer } from "../components/Stats/StyledStatCards";
 
 const AdminDashboardPage = () => {
   const {logout} = useAuth();

@@ -61,7 +61,6 @@ const useAverageDiscountValue = (promotionId) => {
 
       if (promotionData && promotionData.dettaglio_promozionis) {
         promotionData.dettaglio_promozionis.forEach(detail => {
-          console.log(detail);
           // Only consider 'valore' for actual discounts (e.g., 'percentage', 'fixed')
           // You might need to adjust 'tipo_applicazione' logic based on your Strapi setup
           if (detail.valore !== undefined && detail.valore !== null &&

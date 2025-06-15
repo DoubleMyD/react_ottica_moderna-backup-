@@ -44,17 +44,27 @@ const generateStars = (rating) => {
 
 // --- Single Review Card Component (No changes needed here) ---
 const ReviewCard = ({ review }) => {
+  console.log(
+    review.cliente.nome + " " + review.cliente.cognome
+  );
   return (
     <ReviewCardContainer>
       <ReviewHeader>
-        <StarRating>{generateStars(review.rating)}</StarRating>
-        <ReviewTitle>{review.title}</ReviewTitle>
+        <StarRating>{generateStars(review.stelle)}</StarRating>
+        <ReviewTitle>{review.titolo}</ReviewTitle>
       </ReviewHeader>
       <ReviewMeta>
-        <ReviewUser>{review.userName}</ReviewUser>
-        <ReviewDate>{review.date}</ReviewDate>
+        {review && review.cliente ? (
+          <ReviewUser>
+            {`${review.cliente.nome} ${review.cliente.cognome}`}
+          </ReviewUser>
+        ) : (
+          <p>Loading review details...</p>
+          // Or a spinner, skeleton loader, etc.
+        )}
+        <ReviewDate>{review.data}</ReviewDate>
       </ReviewMeta>
-      <ReviewDescription>{review.description}</ReviewDescription>
+      <ReviewDescription>{review.descrizione}</ReviewDescription>
     </ReviewCardContainer>
   );
 };

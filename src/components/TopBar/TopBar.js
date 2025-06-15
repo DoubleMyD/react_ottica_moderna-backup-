@@ -24,7 +24,7 @@ const TopBar = () => {
     else if (role === Role.CLIENT)
       // Assuming CLIENT_DASHBOARD exists
       homePageUrl = Pages.CLIENT_DASHBOARD;
-    else homePageUrl = Pages.CATALOG; // Default for authenticated non-admin/client
+    else homePageUrl = Pages.HOME; // Default for authenticated non-admin/client
   }
 
   const handleLogout = () => {

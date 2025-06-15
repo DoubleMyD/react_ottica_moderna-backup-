@@ -5,25 +5,26 @@ import { buildQueryStringV5 } from "../utils/buildQueryString"; // Assuming this
 import { useAuth } from "./authContext";
 
 /**
- * Custom hook to fetch all client data from Strapi.
+ * Custom hook to fetch client data from Strapi with search and filter capabilities.
  * Populates related 'user' (for email) and 'tipologia_clientes' data.
  * Designed for Strapi v5's flattened data structure.
  *
- * @param {string} searchTerm - Optional search term to filter clients by any text field.
+ * @param {object} filterOptions - An object containing filtering criteria.
+ * @param {string} [filterOptions.searchTerm=""] - Optional search term to filter clients by text fields (name, surname, email, address, city, nationality, client type name).
+ * @param {string} [filterOptions.clientType=""] - Optional client type name to filter clients by their associated tipologia_cliente.
  * @returns {object} An object containing:
  * - clients: An array of client objects.
  * - loading: A boolean indicating if clients are currently being fetched.
  * - error: An error object or null if no error occurred.
  * - refetchClients: A function to manually re-trigger the client fetch.
  */
-const useClients = (searchTerm = "") => {
-  // Accept searchTerm as a parameter
+const useClients = (filterOptions = {}) => {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { authToken } = useAuth();
 
-  const fetchAllClients = useCallback(async () => {
+  const fetchClients = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -34,13 +35,15 @@ const useClients = (searchTerm = "") => {
     }
 
     try {
+      const { searchTerm = "", clientType = "" } = filterOptions;
+
       const queryParams = {
         populate: {
           user: {
-            fields: ["username", "email", "documentId" ],
+            fields: ["username", "email", "documentId"],
           },
           tipologia_clientes: {
-            fields: ["nome", "id"], // Populate 'id' and 'nome' for client types
+            fields: ["nome", "id", "documentId"], // Populate 'id', 'nome', and 'documentId' for client types
           },
         },
         fields: [
@@ -52,13 +55,17 @@ const useClients = (searchTerm = "") => {
           "cap",
           "nazionalita",
           "iscrizione_newsletter",
+          "documentId", // Ensure documentId is fetched at the top level
+          "id" // Ensure id is fetched at the top level
         ],
         pagination: { pageSize: 100000 },
       };
 
-      // Implement search filter
+      const filters = [];
+
+      // Add general search term filters across multiple fields
       if (searchTerm) {
-        queryParams.filters = {
+        filters.push({
           $or: [
             { nome: { $containsi: searchTerm } },
             { cognome: { $containsi: searchTerm } },
@@ -69,24 +76,34 @@ const useClients = (searchTerm = "") => {
             { user: { email: { $containsi: searchTerm } } },
             // Search in related tipologia_clientes names
             { tipologia_clientes: { nome: { $containsi: searchTerm } } },
-            // For date and number fields, you might need to convert searchTerm to appropriate type
-            // This example only handles text-based contains.
-            // { data_nascita: { $containsi: searchTerm } }, // Date as string
-            // { cap: { $eq: parseInt(searchTerm) || -1 } }, // Number exact match
           ],
+        });
+      }
+
+      // Add client type specific filter
+      if (clientType) {
+        filters.push({
+          tipologia_clientes: {
+            nome: { $eq: clientType }, // Filter clients who are associated with a client type of this name
+          },
+        });
+      }
+
+      // Combine all filters with an $and operator if multiple exist
+      if (filters.length > 0) {
+        queryParams.filters = {
+          $and: filters,
         };
       }
 
       const queryString = buildQueryStringV5(queryParams);
+      console.log(`Fetching clients with query: ${queryString}`); // Log the full query
 
-      const response = await fetch(
-        `${STRAPI_BASE_API_URL}/clientes?${queryString}`,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
+      const response = await fetch(`${STRAPI_BASE_API_URL}/clientes?${queryString}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
@@ -106,19 +123,28 @@ const useClients = (searchTerm = "") => {
 
       // Map data to flatten attributes and handle relations for v5
       const mappedClients = data.data.map((item) => {
-        const clientAttributes = item;
+        const clientAttributes = item; // Access attributes for the main client data
 
-        // Ensure tipologia_clientes is an array of plain objects with id and nome
+        // Ensure tipologia_clientes is an array of plain objects with id, nome, and documentId
         const tipologie =
-          clientAttributes.tipologia_clientes?.map((tc) => ({
+          item.tipologia_clientes?.map((tc) => ({ // Ensure .data is accessed for relations
             id: tc.id,
+            documentId: tc.documentId,
             nome: tc.nome,
           })) || [];
 
         return {
-          id: item.id,
-          ...clientAttributes,
-          user: clientAttributes.user, // Flatten user attributes
+          id: item.id, // Strapi ID
+          documentId: clientAttributes.documentId, // Your custom documentId
+          nome: clientAttributes.nome,
+          cognome: clientAttributes.cognome,
+          data_nascita: clientAttributes.data_nascita,
+          indirizzo: clientAttributes.indirizzo,
+          citta: clientAttributes.citta,
+          cap: clientAttributes.cap,
+          nazionalita: clientAttributes.nazionalita,
+          iscrizione_newsletter: clientAttributes.iscrizione_newsletter,
+          user: clientAttributes.user?.data || null, // Flatten user attributes
           tipologia_clientes: tipologie, // Assign the flattened tipologie
         };
       });
@@ -130,13 +156,13 @@ const useClients = (searchTerm = "") => {
     } finally {
       setLoading(false);
     }
-  }, [authToken, searchTerm]); // Re-fetch if authToken or searchTerm changes
+  }, [authToken, filterOptions]); // Re-fetch if authToken or filterOptions changes
 
   useEffect(() => {
-    fetchAllClients();
-  }, [fetchAllClients]);
+    fetchClients();
+  }, [fetchClients]); // Effect depends on the memoized fetchClients
 
-  return { clients, loading, error, refetchClients: fetchAllClients };
+  return { clients, loading, error, refetchClients: fetchClients };
 };
 
 export default useClients;

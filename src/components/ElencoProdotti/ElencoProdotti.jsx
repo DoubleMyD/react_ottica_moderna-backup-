@@ -18,16 +18,28 @@ import {
 } from "./StyledElencoProdotti";
 import { STRAPI_BASE_URL } from "../../data/api";
 import { Pages } from "../../data/constants";
+import DeleteProductButton from "../AdminProducts/DeleteProductButton";
 
 // Updated props: onEditProduct and onDeleteProduct now expect to receive the full product object
-const ElencoProdotti = ({ products, isInPromotionContext = false, isAdminView = false, onEditProduct, onDeleteProduct }) => {
+const ElencoProdotti = ({
+  products,
+  isInPromotionContext = false,
+  isAdminView = false,
+  showProductDetailLink = true,
+  columnWidth = "250px",
+  isTagMode = false,
+  onRemove,
+  onEditProduct,
+  onDeleteProduct: onDeleteProductSuccess,
+}) => {
   const navigate = useNavigate();
 
   const handleProductClick = (documentId) => {
     navigate(`${Pages.CATALOG}/${documentId}`);
   };
 
-  const handleEditClick = (product, e) => { // Now receives full product object
+  const handleEditClick = (product, e) => {
+    // Now receives full product object
     e.stopPropagation();
     if (onEditProduct) {
       onEditProduct(product); // Pass the entire product object
@@ -36,13 +48,13 @@ const ElencoProdotti = ({ products, isInPromotionContext = false, isAdminView = 
 
   const handleDeleteClick = (documentId, e) => {
     e.stopPropagation();
-    if (onDeleteProduct) {
-      onDeleteProduct(documentId);
+    if (onDeleteProductSuccess) {
+      onDeleteProductSuccess(documentId);
     }
   };
 
   return (
-    <ProductListContainer>
+    <ProductListContainer $columnWidth="250px">
       {products.map((product) => {
         const hasStrapiImage = product.immagine && product.immagine.url;
         const strapiImageUrl = hasStrapiImage
@@ -50,9 +62,18 @@ const ElencoProdotti = ({ products, isInPromotionContext = false, isAdminView = 
           : null;
 
         const placeholderImageUrl = "/images/placeholder-product.png";
-        
+
         return (
           <ProductCard key={product.id}>
+            {isTagMode && (
+              <AdminActionButton
+                onClick={(e) => onRemove(product.documentId, e)}
+                title="Rimuovi Prodotto"
+              >
+                ❌
+              </AdminActionButton>
+            )}
+
             {product.brand && <ProductBrand>{product.brand}</ProductBrand>}
 
             {hasStrapiImage ? (
@@ -107,11 +128,13 @@ const ElencoProdotti = ({ products, isInPromotionContext = false, isAdminView = 
               )}
 
             <ProductAction>
-              <ViewButton
-                onClick={() => handleProductClick(product.documentId)}
-              >
-                View Details
-              </ViewButton>
+              {showProductDetailLink && (
+                <ViewButton
+                  onClick={() => handleProductClick(product.documentId)}
+                >
+                  View Details
+                </ViewButton>
+              )}
               {isAdminView && (
                 <>
                   <AdminActionButton
@@ -122,13 +145,17 @@ const ElencoProdotti = ({ products, isInPromotionContext = false, isAdminView = 
                     {/* Pass full product */}
                     ✏️
                   </AdminActionButton>
-                  <AdminActionButton
+                  <DeleteProductButton
+                    onDeleteSuccess={onDeleteProductSuccess}
+                    product={product}
+                  ></DeleteProductButton>
+                  {/* <AdminActionButton
                     $delete
                     onClick={(e) => handleDeleteClick(product.documentId, e)}
                     title="Elimina Prodotto"
                   >
                     🗑️
-                  </AdminActionButton>
+                  </AdminActionButton> */}
                 </>
               )}
               {}

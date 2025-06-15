@@ -4,8 +4,12 @@ import FAQList from "../components/FAQ/FAQList";
 import ContactSection from "../components/ContactSection/ContactSection";
 import React from "react";
 import ShopShowcaseSection from "../components/HomeShowcase/HomeShowcase";
+import useGeneralFAQs from "../hooks/useGeneralFAQs";
+import useReviews from "../hooks/useReviews";
 
 const Home = () => {
+  const { reviews } = useReviews(true);
+
   const dummyReviews = [
     {
       rating: 5,
@@ -41,44 +45,13 @@ const Home = () => {
     },
   ];
 
-  const dummyFAQs = [
-    {
-      id: "faq1",
-      question: "Quali sono gli orari di apertura del negozio?",
-      answer:
-        "Il nostro negozio è aperto dal Lunedì al Venerdì, dalle 9:00 alle 18:00. Il Sabato e la Domenica siamo chiusi.",
-    },
-    {
-      id: "faq2",
-      question: "Accettate pagamenti con carta di credito?",
-      answer:
-        "Sì, accettiamo tutte le principali carte di credito (Visa, MasterCard, American Express) e pagamenti tramite PayPal.",
-    },
-    {
-      id: "faq3",
-      question: "Posso effettuare un reso o un cambio?",
-      answer:
-        "Certo! Offriamo resi e cambi entro 30 giorni dall'acquisto, a condizione che l'articolo sia in perfette condizioni e con lo scontrino originale. Consulta la nostra politica di resi per maggiori dettagli.",
-    },
-    {
-      id: "faq4",
-      question: "Offrite spedizioni internazionali?",
-      answer:
-        "Attualmente, spediamo solo all'interno del territorio nazionale. Stiamo lavorando per estendere le nostre spedizioni anche a livello internazionale in futuro.",
-    },
-    {
-      id: "faq5",
-      question: "Come posso contattare il servizio clienti?",
-      answer:
-        "Puoi contattarci tramite la sezione 'Contatti' del nostro sito web, inviandoci una email a assistenza@tuosito.com, o chiamandoci al numero 0123-456789 durante gli orari di apertura.",
-    },
-  ];
+  const { faqs } = useGeneralFAQs();
 
   return (
     <div>
       <ShopShowcaseSection />
-      <ReviewCarousel reviews={dummyReviews} />
-      <FAQList faqs={dummyFAQs} />
+      <ReviewCarousel reviews={reviews} />
+      <FAQList faqs={faqs} />
       <ContactSection />
     </div>
   );

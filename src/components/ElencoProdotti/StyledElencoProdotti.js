@@ -6,8 +6,10 @@ export const ProductListContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(
     auto-fit,
-    250px
-  ); /* Adjust 250px to your desired fixed width */
+    ${(props) =>
+    props.$columnWidth || "250px"} /* Use the prop directly for fixed width */
+  );
+
   gap: 20px;
   padding: 20px;
   flex-grow: 1;
@@ -22,16 +24,20 @@ export const ProductCard = styled.div`
   display: flex;
   flex-direction: column;
   position: relative;
+  width: 100%; /* Ensure the card takes the full width of its grid cell */
+  min-width: 0; /* Allow the card to shrink below its content's intrinsic width */
+  max-width: 250px
 `;
 
 export const ProductImage = styled.img`
-  width: 100%;
+  max-width: ${(props) => props.$maxWidth || "250px"};
+
+  width: 100%; /* This correctly makes it fit 100% of the ProductCard's width */
   height: auto; /* Maintain aspect ratio */
   aspect-ratio: 1 / 1; /* Keep square proportions if desired */
   object-fit: cover; /* Cover the area, cropping if necessary */
   background-color: #f0f0f0; /* Fallback background for missing images */
 `;
-
 // NEW: ProductInfo styled component
 export const ProductInfo = styled.div`
   padding: 10px;

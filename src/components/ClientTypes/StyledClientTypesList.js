@@ -146,6 +146,13 @@ export const DetailsSection = styled.div`
   margin-top: 15px;
   padding-top: 15px;
   border-top: 1px dashed ${Colors.mediumGray};
+  text-align: center; /* This will horizontally center block-level children's inline content */
+
+  // --- Crucial Changes for Top-Center Alignment ---
+  display: flex; // Make it a flex container
+  flex-direction: column; // Stack children vertically
+  align-items: center; // Horizontally center items (like h4) in the column
+  // --- End Crucial Changes ---
 
   &:first-child {
     margin-top: 0;
@@ -155,15 +162,17 @@ export const DetailsSection = styled.div`
 
   h4 {
     color: ${Colors.darkSectionTitle};
-    font-size: 1rem;
+    font-size: 1.5rem;
     margin-bottom: 10px;
+    margin-top: 0; /* Crucial: Reset default top margin to align to the very top */
   }
 
   ul {
     list-style: none;
     padding: 0;
     margin: 0;
-  }
+    
+    }
 `;
 
 export const NoDetailsMessage = styled.p`
@@ -198,13 +207,21 @@ export const AssociatedListItem = styled.li`
     margin-bottom: 0;
   }
 `;
-
 export const AssociatedItemContent = styled.div`
   display: flex;
   flex-direction: column;
+  /* Missing semicolon on the line below was a syntax error */
+  max-height: ${(props) =>
+    props.$maxHeight || "250px"}; /* Set max-height for this flex item */
   align-items: flex-start;
   flex-grow: 1;
   gap: 3px;
+
+  /* Add overflow-y if content inside can exceed max-height */
+  overflow-y: auto;
+  /* Add padding-right/margin-right to prevent content being hidden by scrollbar */
+  padding-right: 5px;
+  margin-right: -5px;
 `;
 
 export const AssociatedItemTitle = styled.span`

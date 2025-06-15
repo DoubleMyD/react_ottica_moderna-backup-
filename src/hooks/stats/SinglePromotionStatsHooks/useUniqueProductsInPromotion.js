@@ -37,7 +37,7 @@ const useUniqueProductsInPromotion = (promotionId) => {
         populate: {
           dettaglio_promozionis: {
             populate: {
-              prodotto: {
+              prodottos: {
                 fields: ["id"], // Only need product ID to count unique products
               },
             },
@@ -63,8 +63,8 @@ const useUniqueProductsInPromotion = (promotionId) => {
       const uniqueProductIds = new Set();
       if (promotionData && promotionData.dettaglio_promozionis) {
         promotionData.dettaglio_promozionis.forEach(detail => {
-          if (detail.prodotto && detail.prodotto.id) {
-            uniqueProductIds.add(detail.prodotto.id);
+          if (detail.prodottos[0] && detail.prodottos[0].id) {
+            uniqueProductIds.add(detail.prodottos[0].id);
           }
         });
       }

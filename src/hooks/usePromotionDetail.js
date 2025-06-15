@@ -44,7 +44,7 @@ const usePromotionDetail = (promotionDocumentId) => {
             // Name of the relation on your 'Promozione' content type
             fields: ["tipo_applicazione", "valore"],
             populate: {
-              prodotto: {
+              prodottos: {
                 // Name of the relation on your 'DettaglioPromozione' content type
                 fields: ["brand", "nome", "prezzo_unitario", "descrizione"], // Fields needed from product
                 populate: {
@@ -114,7 +114,7 @@ const usePromotionDetail = (promotionDocumentId) => {
 
       if (fetchedPromotionData.dettaglio_promozionis) {
         fetchedPromotionData.dettaglio_promozionis.forEach((dettaglio) => {
-          const product = dettaglio.prodotto;
+          const product = dettaglio.prodottos[0];
           if (product && product.documentId) {
             if (!productsMap.has(product.documentId)) {
               productsMap.set(product.documentId, {

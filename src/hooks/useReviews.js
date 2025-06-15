@@ -8,13 +8,15 @@ import { buildQueryStringV5 } from "../utils/buildQueryString";
  * Populates related 'cliente' and 'prodotto' data.
  * Designed for Strapi v5's flattened data structure.
  *
+ * @param {boolean} [onlyGeneralFaqs=false] - If true, fetches reviews NOT associated with any product.
  * @returns {object} An object containing:
  * - reviews: An array of review objects (Strapi v5 format).
  * - loading: A boolean indicating if reviews are currently being fetched.
  * - error: An error object or null if no error occurred.
  * - refetchReviews: A function to manually re-trigger the reviews fetch.
  */
-const useReviews = () => {
+const useReviews = (onlyGeneralFaqs = false) => {
+  // Added onlyGeneralFaqs parameter with default
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -26,32 +28,37 @@ const useReviews = () => {
     try {
       const queryParams = {
         populate: {
-          // Populate the 'cliente' relation to get user details
           cliente: {
-            // Assuming 'nome' is the field for the client's name. Adjust if different.
             fields: ["nome", "cognome"],
           },
-          // Populate the 'prodotto' relation to get product details (especially image and ID)
           prodotto: {
-            fields: ["nome"], // Get product name for alt text
+            fields: ["nome"],
             populate: {
               immagine: {
-                // Populate image on product
                 fields: ["url", "name"],
               },
             },
           },
         },
-        // Explicitly request the direct fields for review.
-        // In v5, often not strictly needed if populate is also used, but good for clarity.
         fields: ["stelle", "data", "titolo", "descrizione"],
-        sort: ["data:desc"], // Sort by date, newest first
+        sort: ["data:desc"],
       };
+
+      // NEW: Conditionally add filter for 'prodotto' relation being null
+      if (onlyGeneralFaqs) {
+        queryParams.filters = {
+          prodotto: {
+            id: {
+              $null: true, // Filters where the 'prodotto' relation is not set
+            },
+          },
+        };
+      }
 
       const queryString = buildQueryStringV5(queryParams);
 
       const response = await fetch(
-        `${STRAPI_BASE_API_URL}/recensiones?${queryString}` // Assuming 'recensiones' is your plural endpoint
+        `${STRAPI_BASE_API_URL}/recensiones?${queryString}`
       );
 
       if (!response.ok) {
@@ -59,9 +66,9 @@ const useReviews = () => {
       }
 
       const data = await response.json();
-      console.log("Reviews : " , data);
-      // Strapi v5 collection responses still use a 'data' array wrapper.
-      setReviews(data.data || []);
+      console.log("Reviews : ", data);
+
+      setReviews(data.data || data);
     } catch (err) {
       console.error("Error fetching reviews:", err);
       setError(err.message);
@@ -69,11 +76,11 @@ const useReviews = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // No dependencies, as it fetches all reviews
+  }, [onlyGeneralFaqs]); // Dependency added: fetchReviews now re-runs when onlyGeneralFaqs changes
 
   useEffect(() => {
     fetchReviews();
-  }, [fetchReviews]);
+  }, [fetchReviews]); // Dependency for useEffect
 
   return { reviews, loading, error, refetchReviews: fetchReviews };
 };
