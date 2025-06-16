@@ -26,11 +26,15 @@ import useClientTypes from "../../hooks/useClientTypes"; // Import useClientType
 // Import PRODUCT_CATEGORIES from constants file
 import { PRODUCT_CATEGORIES } from "../../data/constants"; // Assuming this path is correct
 
+import FaqFormModal from "../Admin/Product/FaqFormModal";
+
+
 const ProductFormModal = ({
   isOpen,
   onClose,
   onSuccess,
   initialData = null,
+  onFaqSuccess,
 }) => {
   const { authToken } = useAuth();
   const [formData, setFormData] = useState({
@@ -47,6 +51,8 @@ const ProductFormModal = ({
   const [selectedClientTypeIds, setSelectedClientTypeIds] = useState([]); // Stores Strapi internal IDs of client types
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [isFaqModalOpen, setIsFaqModalOpen] = useState(false);
 
   const isEditMode = initialData !== null;
 
@@ -301,6 +307,27 @@ const ProductFormModal = ({
     }
   };
 
+  const handleOpenFaqModal = () => {
+    // Only allow opening FAQ modal in edit mode (i.e., product already exists)
+    if (isEditMode && initialData?.documentId) {
+      setIsFaqModalOpen(true);
+    } else {
+      setError(
+        "Devi prima creare o selezionare un prodotto per gestire le FAQ."
+      );
+    }
+  };
+
+  const handleCloseFaqModal = () => {
+    setIsFaqModalOpen(false);
+    // Optionally, re-fetch product data here if FAQ changes might affect product display
+  };
+
+  const handleFaqSuccess = () => {
+    onFaqSuccess();
+    setIsFaqModalOpen(true);
+  }
+
   return (
     <ModalOverlay>
       <ModalContent>
@@ -480,6 +507,16 @@ const ProductFormModal = ({
           </FileInputContainer>
 
           <ModalActions>
+            {isEditMode && (
+              <SubmitButton
+                type="button"
+                onClick={handleOpenFaqModal}
+                disabled={loading || !initialData?.documentId} // Disable if not in edit mode or no product ID
+                style={{ backgroundColor: "#6c757d", marginRight: "auto" }} // Gray button, left-aligned
+              >
+                Gestisci FAQ
+              </SubmitButton>
+            )}
             <CancelButton type="button" onClick={onClose} disabled={loading}>
               Annulla
             </CancelButton>
@@ -493,6 +530,14 @@ const ProductFormModal = ({
           </ModalActions>
         </ModalForm>
       </ModalContent>
+
+      {/* FaqFormModal renders here, conditionally */}
+      <FaqFormModal
+        isOpen={isFaqModalOpen}
+        onClose={handleCloseFaqModal}
+        productId={initialData?.documentId} // Pass the product ID to the FAQ modal
+        onSuccess={handleFaqSuccess}
+      />
     </ModalOverlay>
   );
 };

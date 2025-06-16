@@ -144,7 +144,7 @@ const useClients = (filterOptions = {}) => {
           cap: clientAttributes.cap,
           nazionalita: clientAttributes.nazionalita,
           iscrizione_newsletter: clientAttributes.iscrizione_newsletter,
-          user: clientAttributes.user?.data || null, // Flatten user attributes
+          user: clientAttributes.user || null, // Flatten user attributes
           tipologia_clientes: tipologie, // Assign the flattened tipologie
         };
       });

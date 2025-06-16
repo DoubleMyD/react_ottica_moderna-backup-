@@ -18,7 +18,7 @@ import {
 } from "./StyledElencoProdotti";
 import { STRAPI_BASE_URL } from "../../data/api";
 import { Pages } from "../../data/constants";
-import DeleteProductButton from "../AdminProducts/DeleteProductButton";
+import DeleteProductButton from "../Admin/Product/AdminProducts/DeleteProductButton";
 
 // Updated props: onEditProduct and onDeleteProduct now expect to receive the full product object
 const ElencoProdotti = ({
@@ -149,13 +149,7 @@ const ElencoProdotti = ({
                     onDeleteSuccess={onDeleteProductSuccess}
                     product={product}
                   ></DeleteProductButton>
-                  {/* <AdminActionButton
-                    $delete
-                    onClick={(e) => handleDeleteClick(product.documentId, e)}
-                    title="Elimina Prodotto"
-                  >
-                    🗑️
-                  </AdminActionButton> */}
+                  
                 </>
               )}
               {}

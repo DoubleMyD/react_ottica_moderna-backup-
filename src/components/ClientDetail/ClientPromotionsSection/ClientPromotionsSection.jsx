@@ -23,7 +23,7 @@ const ClientPromotionsSection = ({ clientId, clientTypes }) => {
   const handlePromotionClick = (promotionDocumentId) => {
     // Navigate to a promotion detail page (e.g., /promotions/:documentId)
     if (promotionDocumentId) {
-      navigate(`${Pages.PROMOTIONS}/${promotionDocumentId}`); // Adjust this path as per your routing
+      navigate(`${Pages.PROMOTION_DETAIL}/${promotionDocumentId}`); // Adjust this path as per your routing
     }
   };
 
@@ -69,6 +69,7 @@ const ClientPromotionsSection = ({ clientId, clientTypes }) => {
               <PromotionListItem
                 key={promo.id}
                 onClick={() => handlePromotionClick(promo.documentId)} // Use documentId for navigation
+                $used={promo.data_utilizzo !== null}
               >
                 {promo.immagine && (
                   <img src={promo.immagine} alt={promo.titolo} />
@@ -79,10 +80,12 @@ const ClientPromotionsSection = ({ clientId, clientTypes }) => {
                   <div className="date-info">
                     {promo.data_invio &&
                       `Inviata il: ${formatItalianDate(promo.data_invio)}`}
-                    {promo.data_utilizzo &&
-                      ` | Utilizzata il: ${formatItalianDate(
-                        promo.data_utilizzo
-                      )}`}
+                    {promo.data_utilizzo && (
+                      <strong>
+                        Utilizzata il: 
+                        {formatItalianDate(promo.data_utilizzo)}
+                      </strong>
+                    )}
                   </div>
                 </div>
               </PromotionListItem>

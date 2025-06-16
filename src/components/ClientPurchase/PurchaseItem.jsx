@@ -16,7 +16,6 @@ import {
 
 const PurchaseItem = ({ purchase }) => {
   const purchaseAttrs = purchase;
-  console.log("Purchase Attributes:", purchaseAttrs);
 
   const formatCurrency = (amount) => {
     if (typeof amount !== "number" || isNaN(amount)) {

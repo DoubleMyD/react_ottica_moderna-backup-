@@ -1,17 +1,17 @@
 // src/components/Admin/Product/AdminProductsSection.jsx
 import React, { useState, useEffect } from "react";
-import ProductFormModal from "../Modals/ProductFormModal"; // Changed import to ProductFormModal
+import ProductFormModal from "../../../Modals/ProductFormModal"; // Changed import to ProductFormModal
 import {
   AdminHeader,
   AdminSectionTitle,
   AdminActionButton,
-} from "../../styles/StyledAdminDashboard";
-import {StatsGridContainer} from "../Stats/StyledStatCards"
-import useProducts from "../../hooks/useProducts"; // Your modified useProducts hook
-import CatalogoPage from "../../pages/Catalogo";
-import MostSoldProductCard from "../Stats/ProducPromotionStats/MostSoldProductCard";
-import MostProfitableProductTypeCard from "../Stats/ProducPromotionStats/MostProfitableProductTypeCard";
-import TopContributingBrandCard from "../Stats/ProducPromotionStats/TopContributingBrandCard";
+} from "../../../../styles/StyledAdminDashboard";
+import {StatsGridContainer} from "../../../Stats/StyledStatCards"
+import useProducts from "../../../../hooks/useProducts"; // Your modified useProducts hook
+import CatalogoPage from "../../../../pages/Catalogo";
+import MostSoldProductCard from "../../../Stats/ProducPromotionStats/MostSoldProductCard";
+import MostProfitableProductTypeCard from "../../../Stats/ProducPromotionStats/MostProfitableProductTypeCard";
+import TopContributingBrandCard from "../../../Stats/ProducPromotionStats/TopContributingBrandCard";
 
 const AdminProductsSection = () => {
   // Pass an empty filters object as this component doesn't filter by default
@@ -87,6 +87,7 @@ const AdminProductsSection = () => {
         onClose={handleModalClose}
         onSuccess={handleFormSuccess} // Unified success callback
         initialData={editingProduct} // Pass the product data for editing
+        onFaqSuccess={refetchProducts}
         key={editingProduct ? editingProduct.id : "new-product"} // Key to force re-render/re-initialization of modal form
       />
     </div>

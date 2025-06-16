@@ -8,14 +8,14 @@ import { buildQueryStringV5 } from "../utils/buildQueryString";
  * Populates related 'cliente' and 'prodotto' data.
  * Designed for Strapi v5's flattened data structure.
  *
- * @param {boolean} [onlyGeneralFaqs=false] - If true, fetches reviews NOT associated with any product.
+ * @param {boolean} [onlyGeneralReview=false] - If true, fetches reviews NOT associated with any product.
  * @returns {object} An object containing:
  * - reviews: An array of review objects (Strapi v5 format).
  * - loading: A boolean indicating if reviews are currently being fetched.
  * - error: An error object or null if no error occurred.
  * - refetchReviews: A function to manually re-trigger the reviews fetch.
  */
-const useReviews = (onlyGeneralFaqs = false) => {
+const useReviews = (productId, generalReview) => {
   // Added onlyGeneralFaqs parameter with default
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,7 @@ const useReviews = (onlyGeneralFaqs = false) => {
             fields: ["nome", "cognome"],
           },
           prodotto: {
-            fields: ["nome"],
+            fields: ["nome", "id", "documentId"],
             populate: {
               immagine: {
                 fields: ["url", "name"],
@@ -44,12 +44,24 @@ const useReviews = (onlyGeneralFaqs = false) => {
         sort: ["data:desc"],
       };
 
+      // Add these lines to debug
+      console.log("Type of productId:", typeof productId);
+      console.log("Value of productId:", productId);
+      
       // NEW: Conditionally add filter for 'prodotto' relation being null
-      if (onlyGeneralFaqs) {
+      if (generalReview === true) {
         queryParams.filters = {
           prodotto: {
             id: {
               $null: true, // Filters where the 'prodotto' relation is not set
+            },
+          },
+        };
+      } else if(productId !== null){
+        queryParams.filters = {
+          prodotto: {
+            id: {
+              $eq: productId, // Filters where the 'prodotto' relation is equal to productId
             },
           },
         };
@@ -76,7 +88,7 @@ const useReviews = (onlyGeneralFaqs = false) => {
     } finally {
       setLoading(false);
     }
-  }, [onlyGeneralFaqs]); // Dependency added: fetchReviews now re-runs when onlyGeneralFaqs changes
+  }, [productId]); // Dependency added: fetchReviews now re-runs when onlyGeneralFaqs changes
 
   useEffect(() => {
     fetchReviews();

@@ -54,7 +54,7 @@ const ClientDashboard = () => {
       case "profile":
         return <ClientProfileSection />;
       case "purchases":
-        return <PurchaseHistorySection clientId={clienteData.id}/>;
+        return <PurchaseHistorySection clientId={clienteData?.id}/>;
       default:
         return <ClientProfileSection />;
     }

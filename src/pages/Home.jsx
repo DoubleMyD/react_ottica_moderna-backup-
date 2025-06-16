@@ -8,7 +8,7 @@ import useGeneralFAQs from "../hooks/useGeneralFAQs";
 import useReviews from "../hooks/useReviews";
 
 const Home = () => {
-  const { reviews } = useReviews(true);
+  const { reviews } = useReviews();
 
   const dummyReviews = [
     {

@@ -36,14 +36,14 @@ const useProductFAQs = (productDocumentId) => {
         filters: {
           // Filter FAQ entries where their 'prodottos' relation contains the current productId
           // 'prodottos' is the relation field name on your 'FAQ' content type linking to 'Prodotto'.
-          prodottos: {
+          prodotto: {
             documentId: {
               $eq: productDocumentId,
             },
           },
         },
         // Explicitly request the fields you need from the FAQ entry itself.
-        fields: ["domanda", "risposta", "data"],
+        fields: ["domanda", "risposta", "data", "id", "documentId"],
         // You might want to sort the FAQs, e.g., by their 'data' field or manually
         sort: ["data:asc"], // Sort by creation/update date, adjust as needed
       };

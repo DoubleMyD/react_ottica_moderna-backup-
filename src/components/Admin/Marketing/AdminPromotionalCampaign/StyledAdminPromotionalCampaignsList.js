@@ -1,6 +1,6 @@
 // src/styles/StyledPromotionalCampaignsList.js
 import styled from "styled-components";
-import { Colors } from "../../styles/colors";
+import { Colors } from "../../../../styles/colors";
 
 export const CampaignsContainer = styled.div`
   padding: 30px;

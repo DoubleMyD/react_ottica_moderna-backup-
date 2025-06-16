@@ -145,7 +145,7 @@ const ClientList = ({ setActiveSection }) => {
     clientTypes: availableClientTypes,
     loading: clientTypesLoading,
     error: clientTypesError,
-  } = useClientTypes();
+  } = useClientTypes(filterOptions);
 
   const handleNewClient = () => {
     alert("Funzione 'Nuovo Cliente' non implementata.");

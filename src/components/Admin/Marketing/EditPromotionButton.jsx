@@ -40,6 +40,7 @@ const StyledAdminActionButton = styled.button`
 const EditPromotionButton = ({ promotion, onEditSuccess, disabled = false, showText = true }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  console.log("Edit button promotion : ", promotion);
   const handleEditClick = () => {
     setIsModalOpen(true);
   };

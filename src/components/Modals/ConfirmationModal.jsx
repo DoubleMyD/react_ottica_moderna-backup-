@@ -18,11 +18,13 @@ const ConfirmationModal = ({
   onConfirm,
   title,
   message,
-  confirmText = 'Conferma',
-  cancelText = 'Annulla',
+  confirmText = "Conferma",
+  cancelText = "Annulla",
   loading = false,
   error = null,
-  children // For more complex messages or content
+  modalWidth = "500px", // Default width
+  modalHeight = "auto", // Default height
+  children, // For more complex messages or content
 }) => {
   if (!isOpen) return null;
 
@@ -33,11 +35,16 @@ const ConfirmationModal = ({
   };
 
   return (
-    <ModalOverlay onClick={onClose}> {/* Close on overlay click */}
-      <ModalContent onClick={e => e.stopPropagation()}> {/* Prevent closing when clicking inside */}
+    <ModalOverlay onClick={onClose}>
+      {/* Close on overlay click */}
+      <ModalContent $modalWidth={modalWidth} $modalHeight={modalHeight} onClick={(e) => e.stopPropagation()}>
+        {" "}
+        {/* Prevent closing when clicking inside */}
         <ModalHeader>
           <h2>{title}</h2>
-          <CloseButton onClick={onClose} disabled={loading}>&times;</CloseButton>
+          <CloseButton onClick={onClose} disabled={loading}>
+            &times;
+          </CloseButton>
         </ModalHeader>
         {error && <ErrorMessage>{error}</ErrorMessage>}
         {message && <ModalMessage>{message}</ModalMessage>}
@@ -47,7 +54,7 @@ const ConfirmationModal = ({
             {cancelText}
           </CancelButton>
           <ConfirmButton onClick={handleConfirm} disabled={loading}>
-            {loading ? 'Caricamento...' : confirmText}
+            {loading ? "Caricamento..." : confirmText}
           </ConfirmButton>
         </ModalActions>
       </ModalContent>

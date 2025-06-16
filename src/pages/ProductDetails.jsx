@@ -39,14 +39,28 @@ import {
   PromotionText,
   PlaceholderText,
 } from "../styles/StyledProductDetails"; // Ensure all necessary styled components are imported
-import { AdminSection, Pages } from "../data/constants";
+import { AdminSection, Pages, Role } from "../data/constants";
+import { useAuth } from "../hooks/authContext";
+import { AdminActionButton } from "../styles/StyledAdminDashboard";
+import DeleteProductButton from "../components/Admin/Product/AdminProducts/DeleteProductButton";
+import ProductFormModal from "../components/Modals/ProductFormModal";
+import useSingleProduct from "../hooks/useSingleProduct";
+import {
+  ClientTypesInvolvedBlock,
+  ClientTypeTag,
+  ClientTypeTagList,
+} from "../components/Admin/Marketing/AdminPromotionDetail/StyledAdminPromotionDetailPage";
+import ReviewsPage from "./Reviews";
 
 const ProductDetailPage = () => {
   const { documentId } = useParams();
   const navigate = useNavigate();
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { isAuthenticated, role } = useAuth();
+
+  const { product, loading, error, refetchProduct } =
+    useSingleProduct(documentId);
+
+  const [isModalOpen, setIsModalOpen] = useState(false); // Unified modal state
 
   // Use the custom hook to fetch 'dettaglioPromozione' entries
   const {
@@ -61,52 +75,10 @@ const ProductDetailPage = () => {
     loading: faqsLoading,
     error: faqsError,
   } = useProductFAQs(documentId);
-  // --- End of new hook usage ---
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        if (!documentId) {
-          throw new Error("Product ID is missing in the URL.");
-        }
-
-        const queryParams = {
-          populate: {
-            immagine: {
-              fields: ["name", "alternativeText", "width", "height", "url"],
-            },
-          },
-        };
-        const queryString = buildQueryStringV5(queryParams);
-
-        const response = await fetch(
-          `${STRAPI_BASE_API_URL}/prodottos/${documentId}?${queryString}`
-        );
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error(`Product with ID ${documentId} not found.`);
-          }
-          throw new Error(
-            `Failed to fetch product data: ${response.statusText}`
-          );
-        }
-
-        const data = await response.json();
-        setProduct(data);
-      } catch (err) {
-        console.error("Error fetching product:", err);
-        setError(err.message);
-        setProduct(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [documentId]);
+  // useEffect(() => {
+  //   refetchProduct();
+  // }, [documentId]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("it-IT", {
@@ -132,6 +104,30 @@ const ProductDetailPage = () => {
     navigate(
       `${Pages.ADMIN}?section=${AdminSection.Profilazione_TipologieCliente}&typeId=${typeId}`
     );
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleFormSuccess = () => {
+    setIsModalOpen(false);
+    refetchProduct(); // Refresh the product list after successful creation/update
+  };
+
+  const handleFaqSuccess = () => {
+    refetchProduct();
+  }
+
+  const handleEditProduct = (e) => {
+    e.stopPropagation();
+    setIsModalOpen(true); // Open the modal
+  };
+
+  // The handleDeleteProduct function will now simply call the refetch after deletion
+  // The actual deletion logic and modal are handled by DeleteProductButton
+  const handleDeleteProductSuccess = () => {
+    navigate(-1); // Refetch the list after a successful deletion
   };
 
   // --- Combined Loading and Error States (now includes FAQs) ---
@@ -182,9 +178,43 @@ const ProductDetailPage = () => {
     immagine?.url || `https://placehold.co/600x400/AAAAAA/FFFFFF?text=No+Image`;
   const isAvailable = quantita_disponibili > 0;
 
+  // Map client types for rendering tags
+  const involvedClientTypes =
+    product?.tipologia_clientes?.map((type) => ({
+      id: type.id,
+      documentId: type.documentId,
+      nome: type.nome,
+    })) || [];
+
   return (
     <ProductDetailContainer>
       <BackArrowButton onClick={handleGoBack}>&larr;</BackArrowButton>
+
+      {isAuthenticated && role === Role.ADMIN && (
+        <div
+          style={{
+            display: "flex",
+
+            justifyContent: "flex-end",
+
+            marginBottom: "20px",
+
+            gap: "20px",
+          }}
+        >
+          <AdminActionButton
+            onClick={(e) => handleEditProduct(e)}
+            title="Modifica Prodotto"
+          >
+            {" "}
+            ✏️
+          </AdminActionButton>
+          <DeleteProductButton
+            onDeleteSuccess={handleDeleteProductSuccess}
+            product={product}
+          ></DeleteProductButton>
+        </div>
+      )}
 
       <ProductDetailHeader>
         <ProductName>{nome}</ProductName>
@@ -193,6 +223,11 @@ const ProductDetailPage = () => {
       <ProductContentWrapper>
         <ProductImageContainer>
           <ProductImage src={`${STRAPI_BASE_URL}${imageUrl}`} alt={nome} />
+          <ReviewsPage
+            productId={product.id}
+            generalFaq={false}
+            disableInteraction={true}
+          ></ReviewsPage>
         </ProductImageContainer>
 
         <ProductInfoContainer>
@@ -309,6 +344,36 @@ const ProductDetailPage = () => {
             )}
           </PromotionsSection>
 
+          {isAuthenticated && role === Role.ADMIN && (
+            <ClientTypesInvolvedBlock>
+              <h3>ELENCO TIPOLOGIE CLIENTE COINVOLTE</h3>
+              {involvedClientTypes.length > 0 ? (
+                <ClientTypeTagList>
+                  {involvedClientTypes.map((type) => (
+                    <ClientTypeTag
+                      key={type.id}
+                      onClick={(e) =>
+                        handleAssociatedTypeClick(type.documentId, e)
+                      }
+                    >
+                      {type.nome}
+                    </ClientTypeTag>
+                  ))}
+                </ClientTypeTagList>
+              ) : (
+                <PlaceholderText
+                  style={{
+                    textAlign: "left",
+                    padding: "10px 0",
+                    fontSize: "0.9em",
+                  }}
+                >
+                  Nessuna tipologia cliente associata.
+                </PlaceholderText>
+              )}
+            </ClientTypesInvolvedBlock>
+          )}
+
           {/* --- FAQs Section --- */}
           {faqsError && (
             <PromotionsSection className="mt-8">
@@ -340,6 +405,15 @@ const ProductDetailPage = () => {
           {/* --- End FAQs Section --- */}
         </ProductInfoContainer>
       </ProductContentWrapper>
+
+      <ProductFormModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSuccess={handleFormSuccess} // Unified success callback
+        initialData={product} // Pass the product data for editing
+        onFaqSuccess={handleFaqSuccess}
+        key={product.id} // Key to force re-render/re-initialization of modal form
+      />
     </ProductDetailContainer>
   );
 };

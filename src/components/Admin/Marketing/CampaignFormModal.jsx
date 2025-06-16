@@ -23,6 +23,7 @@ import { STRAPI_BASE_API_URL } from "../../../data/api";
 import { useAuth } from "../../../hooks/authContext";
 import useClientTypes from "../../../hooks/useClientTypes";
 import useProduct from "../../../hooks/useProducts";
+import useProductPromotions from "../../../hooks/useProductPromotion";
 
 // This modal will now handle both creation and editing of campaigns
 const CampaignFormModal = ({
@@ -35,7 +36,7 @@ const CampaignFormModal = ({
 
   // Memoize filterOptions for useClientTypes to prevent infinite loop
   const clientTypeFilterOptions = useMemo(() => ({}), []); // No filters needed for this dropdown, so empty object
-
+  
   const {
     clientTypes: availableClientTypes,
     loading: clientTypesLoading,
@@ -70,7 +71,7 @@ const CampaignFormModal = ({
   useEffect(() => {
     if (isOpen) {
       setError(null); // Clear any previous errors
-
+      console.log("Campaign inital data : ", initialData);
       if (isEditMode && initialData) {
         // Populate campaign data
         setCampaignData({

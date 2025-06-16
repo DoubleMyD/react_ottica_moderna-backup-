@@ -28,7 +28,7 @@ const useGeneralFAQs = () => {
         filters: {
           // Filter FAQ entries where the 'prodottos' relation is null.
           // In Strapi, for relations, checking for $null is the correct way to find unlinked entries.
-          prodottos: {
+          prodotto: {
             $null: true,
           },
         },

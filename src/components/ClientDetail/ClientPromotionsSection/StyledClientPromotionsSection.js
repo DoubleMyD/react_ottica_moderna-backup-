@@ -46,6 +46,14 @@ export const PromotionListItem = styled.li`
   cursor: pointer;
   transition: all 0.2s ease-in-out; /* Smooth transition for hover effects */
 
+  ${(props) =>
+    props.$used &&
+    `
+      background-color: ${Colors.offWhite}; /* Slightly off-white background for each item */
+  border: 5px solid ${Colors.darkBlue}; /* Defined border */
+
+    `}
+
   &:hover {
     background-color: ${Colors.lightBlueBackground}; /* Light blue on hover */
     border-color: ${Colors.primaryBlue}; /* Blue border on hover */

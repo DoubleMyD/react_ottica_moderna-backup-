@@ -21,6 +21,7 @@ export const Pages = {
   FAQs: "/faqs",
   CLIENT_DETAIL: "/client-details",
   PROMOTION_DETAIL: "/promotion-detail",
+  ADMIN_PRODUCT_DETAIL: "/admin-product-detail",
 };
 
 // src/utils/AdminSection.js

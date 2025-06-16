@@ -1,9 +1,9 @@
 // src/components/Admin/Product/DeleteProductButton.jsx
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Colors } from '../../styles/colors';
-import ConfirmationModal from '../Modals/ConfirmationModal'; // Generic confirmation modal
-import useDeleteProduct from '../../hooks/useDeleteProduct'; // NEW: New hook for deleting product
+import { Colors } from '../../../../styles/colors';
+import ConfirmationModal from '../../../Modals/ConfirmationModal'; // Generic confirmation modal
+import useDeleteProduct from '../../../../hooks/useDeleteProduct'; // NEW: New hook for deleting product
 
 const StyledAdminActionButton = styled.button`
   background-color: ${Colors.accentRed};

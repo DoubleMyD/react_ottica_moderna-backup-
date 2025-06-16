@@ -1,6 +1,16 @@
 // src/styles/Modals/StyledConfirmationModal.js
-import styled from "styled-components";
+import styled, {keyframes} from "styled-components";
 import { Colors } from "../colors"; // Ensure path is correct
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const slideIn = keyframes`
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+`;
 
 export const ModalOverlay = styled.div`
   position: fixed;
@@ -30,6 +40,16 @@ export const ModalContent = styled.div`
   font-family: "Inter", sans-serif;
   color: ${Colors.darkText};
   text-align: center; /* Center content by default */
+
+  // --- NEW: Dynamic width and height based on props ---
+  max-width: ${(props) =>
+    props.$modalWidth || "500px"}; // Default if not provided
+  width: 90%; // Ensure responsiveness for smaller screens
+  height: ${(props) => props.$modalHeight || "auto"}; // Default if not provided
+
+  animation: ${slideIn} 0.3s ease-out;
+  position: relative;
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
 
   @media (max-width: 768px) {
     padding: 20px;

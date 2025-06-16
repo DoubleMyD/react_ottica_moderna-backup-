@@ -58,7 +58,7 @@ const useProducts = (filters = {}) => {
       if (role === Role.ADMIN && authToken) {
         requestHeaders.Authorization = `Bearer ${authToken}`;
       }
-
+     
       const response = await fetch(
         `${STRAPI_BASE_API_URL}/prodottos?${queryString}`,
         {
@@ -75,7 +75,8 @@ const useProducts = (filters = {}) => {
       }
 
       const data = await response.json();
-      console.log("Product data", data);
+      console.log("Products data", data);
+      
       const formattedAllProducts = Array.isArray(data.data)
         ? data.data.map((item) => ({
             id: item.id,
@@ -86,7 +87,7 @@ const useProducts = (filters = {}) => {
           }))
         : [];
 
-      allProductsDataRef.current = formattedAllProducts;
+        allProductsDataRef.current = formattedAllProducts;
 
       const allBrandsFromData = new Set();
       const allTypesFromData = new Set();

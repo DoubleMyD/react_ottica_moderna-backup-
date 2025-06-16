@@ -16,8 +16,7 @@ import { AdminSection, Pages } from "../data/constants";
 import ClientTypesList from "../components/ClientTypes/ClientTypesList";
 import ClientList from "../components/ClientList/ClientList";
 import { useAuth } from "../hooks/authContext";
-import PromotionalCampaignsList from "../components/AdminPromotionalCampaign/AdminPromotionalCampaignsList";
-import AdminProductsSection from "../components/AdminProducts/AdminProducts";
+import AdminProductsSection from "../components/Admin/Product/AdminProducts/AdminProducts";
 
 import styled from "styled-components";
 import { Colors } from "../styles/colors";
@@ -47,6 +46,7 @@ import PromotionWithMostProductsCard from "../components/Stats/PromotionsStats/P
 import LongestPromotionCard from "../components/Stats/PromotionsStats/LongestPromotionCard";
 import PromotionsByClientTypeDistributionCard from "../components/Stats/PromotionsStats/PromotionsByClientTypeDistributionCard";
 import { StatsGridContainer } from "../components/Stats/StyledStatCards";
+import PromotionalCampaignsList from "../components/Admin/Marketing/AdminPromotionalCampaign/AdminPromotionalCampaignsList";
 
 const AdminDashboardPage = () => {
   const {logout} = useAuth();

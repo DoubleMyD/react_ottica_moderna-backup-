@@ -1,7 +1,7 @@
 // src/pages/PromotionDetailPage.jsx
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import usePromotionDetail from "../../hooks/usePromotionDetail"; // The new hook
+import usePromotionDetail from "../../../../hooks/usePromotionDetail"; // The new hook
 import {
   PromotionDetailContainer,
   BackArrowButton,
@@ -19,28 +19,27 @@ import {
   PlaceholderText,
 } from "./StyledAdminPromotionDetailPage"; // Your new styled components
 
-import { formatItalianDate } from "../../utils/formatters"; // Re-use formatter
-import ElencoProdotti from "../ElencoProdotti/ElencoProdotti";
-import { AdminSection, Pages } from "../../data/constants";
-import usePromotionUsageStats from "../../hooks/usePromotionUsageStats";
+import { formatItalianDate } from "../../../../utils/formatters"; // Re-use formatter
+import ElencoProdotti from "../../../ElencoProdotti/ElencoProdotti";
+import { AdminSection, Pages } from "../../../../data/constants";
+import usePromotionUsageStats from "../../../../hooks/usePromotionUsageStats";
 
 
-import { Colors } from "../../styles/colors";
+import { Colors } from "../../../../styles/colors";
 import styled from "styled-components";
 
 // Import the new single-promotion stat cards
-import PromotionClientsReachedCard from "../Stats/SinglePromotionStats/PromotionClientsReachedCard";
-import PromotionUniqueProductsCard from "../Stats/SinglePromotionStats/PromotionUniqueProductsCard";
-import PromotionAverageDiscountCard from "../Stats/SinglePromotionStats/PromotionAverageDiscountCard";
-import PromotionDaysRemainingCard from "../Stats/SinglePromotionStats/PromotionDaysRemainingCard";
-import PromotionMostActiveClientTypeCard from "../Stats/SinglePromotionStats/PromotionMostActiveClientTypeCard";
+import PromotionClientsReachedCard from "../../../Stats/SinglePromotionStats/PromotionClientsReachedCard";
+import PromotionUniqueProductsCard from "../../../Stats/SinglePromotionStats/PromotionUniqueProductsCard";
+import PromotionAverageDiscountCard from "../../../Stats/SinglePromotionStats/PromotionAverageDiscountCard";
+import PromotionDaysRemainingCard from "../../../Stats/SinglePromotionStats/PromotionDaysRemainingCard";
+import PromotionMostActiveClientTypeCard from "../../../Stats/SinglePromotionStats/PromotionMostActiveClientTypeCard";
 
 import StartCampaignButton from "../AdminPromotionalCampaign/StartCampaignButton";
-import CampaignConfirmationModal from "../Modals/CampaignConfirmationModal";
-import CampaignFormModal from "../Admin/Marketing/CampaignFormModal";
-import { AdminActionButton } from "../ElencoProdotti/StyledElencoProdotti";
-import EditPromotionButton from "../Admin/Marketing/EditPromotionButton";
-import DeletePromotionButton from "../Admin/Marketing/DeletePromotionButton";
+import CampaignConfirmationModal from "../../../Modals/CampaignConfirmationModal";
+import CampaignFormModal from "../CampaignFormModal";
+import EditPromotionButton from "../EditPromotionButton";
+import DeletePromotionButton from "../DeletePromotionButton";
 
 // A dedicated container for the single promotion stats grid
 const PromotionStatsGridContainer = styled.div`
@@ -78,17 +77,14 @@ const AdminPromotionDetailPage = () => {
   } = usePromotionUsageStats(promotion?.id); // Pass promotion.id only when available
 
   // State for the launch confirmation modal
-  const [isCampaignConfirmationModalOpen, setIsCampaignConfirmationModalOpen] = useState(false);
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+   const [promotionDocumentIdToLaunch, setPromotionDocumentIdToLaunch] =
+      useState(null);
   // NEW: State for the edit form modal
   const [isEditCampaignModalOpen, setIsEditCampaignModalOpen] = useState(false);
 
   const handleGoBack = () => {
     navigate(-1);
-  };
-
-  const handleAddProduct = () => {
-    handleEditCampaign();
-    // Example: navigate('/admin/products/add-to-promotion', { state: { promotionId: promotion?.id } });
   };
 
   // Handler to open the EDIT campaign modal
@@ -113,7 +109,7 @@ const AdminPromotionDetailPage = () => {
   const handleStartCampaignClick = () => {
     // Only allow starting campaign if promotion data is loaded and has a valid ID
     if (promotion && promotion.id) {
-      setIsCampaignConfirmationModalOpen(true);
+      setIsConfirmationModalOpen(true);
     } else {
       alert("Impossibile avviare la campagna: dati promozione non disponibili.");
     }
@@ -129,6 +125,18 @@ const AdminPromotionDetailPage = () => {
   const handleCampaignDeleteSuccess = () => {
     navigate(-1);
   }
+
+  const handleCampaignSentSuccess = () => {
+    setIsConfirmationModalOpen(false);
+    setPromotionDocumentIdToLaunch(null);
+    alert("Campagna avviata con successo!");
+    refetchPromotionDetails();
+  };
+
+  const handleConfirmationModalClose = () => {
+    setIsConfirmationModalOpen(false);
+    setPromotionDocumentIdToLaunch(null);
+  };
 
 
   if (loading || usageStatsLoading) {
@@ -205,7 +213,7 @@ const AdminPromotionDetailPage = () => {
           onEditSuccess={handleCampaignUpdateSuccess}
           showText={false}
         />
-        {console.log("promo" , promotion)}
+        {console.log("promo", promotion)}
         <DeletePromotionButton
           promotion={promotion}
           onDeleteSuccess={handleCampaignDeleteSuccess}
@@ -281,11 +289,11 @@ const AdminPromotionDetailPage = () => {
       </PromotionHeaderGrid>
 
       {/* Button to start campaign - Conditionally rendered based on promotion activity */}
-      {(isPromotionActive && involvedClientTypes.length > 0) ? (
+      {isPromotionActive && involvedClientTypes.length > 0 ? (
         <StartCampaignButton
           onClick={handleStartCampaignClick}
           // Disable button if modal is open to prevent double clicks/conflicts
-          disabled={isCampaignConfirmationModalOpen || isEditCampaignModalOpen}
+          disabled={isConfirmationModalOpen || isEditCampaignModalOpen}
         />
       ) : (
         <p
@@ -319,10 +327,18 @@ const AdminPromotionDetailPage = () => {
             isInPromotionContext={true} // Indicate that products are shown within a promotion context
           />
         </ProductListContainer>
-        {/* <AddProductButton onClick={handleAddProduct}>
-          AGGIUNGI PRODOTTO
-        </AddProductButton> */}
       </ProductsSection>
+
+      {/* Campaign Launch Confirmation Modal */}
+      {isConfirmationModalOpen && (
+        <CampaignConfirmationModal
+          isOpen={isConfirmationModalOpen}
+          onClose={handleConfirmationModalClose}
+          promotion={promotion}
+          involvedProducts={involvedProducts}
+          onCampaignSentSuccess={handleCampaignSentSuccess}
+        />
+      )}
     </PromotionDetailContainer>
   );
 };

@@ -44,9 +44,7 @@ const generateStars = (rating) => {
 
 // --- Single Review Card Component (No changes needed here) ---
 const ReviewCard = ({ review }) => {
-  console.log(
-    review.cliente.nome + " " + review.cliente.cognome
-  );
+  
   return (
     <ReviewCardContainer>
       <ReviewHeader>

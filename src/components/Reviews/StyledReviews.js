@@ -13,6 +13,15 @@ export const ReviewCardContainer = styled.div`
   flex-direction: column;
   justify-content: space-between;
   box-sizing: border-box; /* Include padding and border in the width */
+
+  // This is the key part to ignore clicks on the container and all its children
+  ${(props) =>
+    props.disableInteraction &&
+    `
+    pointer-events: none;
+    opacity: 0.7; // Optional: Add a visual cue that it's disabled
+    cursor: default; // Optional: Set cursor to default for visual feedback
+  `}
 `;
 
 export const ReviewHeader = styled.div`
@@ -28,6 +37,24 @@ export const StarRating = styled.div`
   span {
     margin-right: 2px;
   }
+`;
+
+export const ReviewProductImg = styled.img`
+  width: 100px;
+  height: 100px;
+  objectFit: cover;
+  borderRadius: 4px;
+  cursor: pointer;
+
+                // This is the key part to ignore clicks on the container and all its children
+  ${(props) =>
+    props.$disableInteraction &&
+    `
+    pointer-events: none;
+    opacity: 0.7; // Optional: Add a visual cue that it's disabled
+    cursor: default; // Optional: Set cursor to default for visual feedback
+  `}
+
 `;
 
 export const ReviewTitle = styled.h3`
@@ -78,6 +105,15 @@ export const ReviewsPageContainer = styled.div`
     padding: 20px;
     margin: 20px auto;
   }
+
+  // This is the key part to ignore clicks on the container and all its children
+  ${(props) =>
+    props.disableInteraction &&
+    `
+    pointer-events: none;
+    opacity: 0.7; // Optional: Add a visual cue that it's disabled
+    cursor: default; // Optional: Set cursor to default for visual feedback
+  `}
 `;
 
 export const ReviewsListGrid = styled.div`

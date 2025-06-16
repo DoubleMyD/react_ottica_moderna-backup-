@@ -15,7 +15,7 @@ import { useAuth } from "./authContext";
  * - refetchPromotions: A function to manually re-trigger the promotions fetch.
  */
 const usePromotions = () => {
-  const  {authToken} = useAuth();
+  const { authToken } = useAuth();
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -35,9 +35,46 @@ const usePromotions = () => {
             },
             fields: ["nome", "descrizione", "tratti_caratteristici"],
           },
+          dettaglio_promozionis: {
+            populate: {
+              prodottos: {
+                populate: {
+                  immagine: {
+                    fields: ["url"],
+                  },
+                  fields: [
+                    "nome",
+                    "descrizione",
+                    "brand",
+                    "tipologia",
+                    "quantita_disponibili",
+                    "prezzo_unitario",
+                    "documentId", // Added documentId to fetched fields
+                  ],
+                },
+              },
+              promoziones: {
+                fields: [
+                  "titolo",
+                  "descrizione",
+                  "data_inizio",
+                  "data_fine",
+                  "documentId",
+                ], // Added documentId here too
+              },
+            },
+            fields: ["tipo_applicazione", "valore", "documentId"],
+          },
         },
         // Explicitly request the fields you need for promotion.
-        fields: ["titolo", "descrizione", "data_inizio", "data_fine", "documentId"], // Assuming 'status' for STATO
+        fields: [
+          "titolo",
+          "descrizione",
+          "data_inizio",
+          "data_fine",
+          "documentId",
+          "codice",
+        ], // Assuming 'status' for STATO
         sort: ["data_inizio:desc"], // Sort by start date, newest first
       };
 
@@ -58,7 +95,7 @@ const usePromotions = () => {
       }
 
       const data = await response.json();
-      console.log("Promotions: " , data);
+      console.log("Promotions: ", data);
       // Strapi v5 collection responses typically return a 'data' array at the top level,
       // with individual items inside being flattened (no 'attributes' wrapper).
       setPromotions(data.data || []);

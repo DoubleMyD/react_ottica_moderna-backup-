@@ -1,7 +1,7 @@
 // src/components/Admin/Marketing/StartCampaignButton.jsx
 import React from 'react';
 import styled from 'styled-components';
-import { Colors } from '../../styles/colors';
+import { Colors } from '../../../../styles/colors';
 
 const StyledButton = styled.button`
   background-color: ${Colors.primaryBlue};

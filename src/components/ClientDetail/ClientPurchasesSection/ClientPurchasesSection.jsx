@@ -48,7 +48,7 @@ const ClientPurchasesSection = ({ clientId }) => {
 
   return (
     <SectionCard>
-      <SectionTitle>Storico Acquisti</SectionTitle>
+      {/* <SectionTitle>Storico Acquisti</SectionTitle> */}
       {mostPurchasedProduct && (
         <MostPurchasedProductBlock
           onClick={(e) =>
@@ -72,14 +72,11 @@ const ClientPurchasesSection = ({ clientId }) => {
         </MostPurchasedProductBlock>
       )}
 
+      <SectionContent>
+        <PurchaseHistorySection clientId={clientId} />
+      </SectionContent>
       {/* This renders the actual list of purchases. Its styling is defined within PurchaseHistorySection. */}
-      {purchases && purchases.length > 0 ? (
-        <SectionContent>
-          <PurchaseHistorySection clientId={clientId} />
-        </SectionContent>
-      ) : (
-        <PlaceholderText>Nessun acquisto rilevante trovato.</PlaceholderText>
-      )}
+      
     </SectionCard>
   );
 };

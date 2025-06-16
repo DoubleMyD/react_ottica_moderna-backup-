@@ -1,40 +1,41 @@
 // src/components/Marketing/PromotionalCampaignsList.jsx
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
-  CampaignsContainer,
-  TopControls,
-  NewCampaignButton,
-  CampaignsGrid,
-  CampaignCard,
-  CampaignTitle,
-  CampaignDetails,
-  ClientTypesInvolvedList,
-  ClientTypeTag,
   CampaignActionButton,
   // Import the new wrapper
-  CampaignActionsWrapper, // NEW: Import CampaignActionsWrapper
+  CampaignActionsWrapper,
+  CampaignCard,
+  CampaignDetails,
+  CampaignsContainer,
+  CampaignsGrid,
+  CampaignTitle,
+  ClientTypesInvolvedList,
+  ClientTypeTag,
+  NewCampaignButton, // NEW: Import CampaignActionsWrapper
   PlaceholderText,
+  TopControls,
 } from "./StyledAdminPromotionalCampaignsList";
 
-import { StatsGridContainer } from "../Stats/StyledStatCards";
-import { AdminSection, Pages } from "../../data/constants";
-import usePromotions from "../../hooks/usePromotions";
-import { formatItalianDate } from "../../utils/formatters";
+import { AdminSection, Pages } from "../../../../data/constants";
+import usePromotions from "../../../../hooks/usePromotions";
+import {formatItalianDate} from "../../../../utils/formatters";
 
-import TotalActivePromotionsCard from "../Stats/PromotionsStats/TotalActivePromotionsCard";
-import AvgClientsPerPromotionCard from "../Stats/PromotionsStats/AvgClientsPerPromotionCard";
-import PromotionWithMostProductsCard from "../Stats/PromotionsStats/PromotionWithMostProductsCard";
-import LongestPromotionCard from "../Stats/PromotionsStats/LongestPromotionCard";
-import PromotionsByClientTypeDistributionCard from "../Stats/PromotionsStats/PromotionsByClientTypeDistributionCard";
+
+import AvgClientsPerPromotionCard from "../../../Stats/PromotionsStats/AvgClientsPerPromotionCard";
+import TotalActivePromotionsCard from "../../../Stats/PromotionsStats/TotalActivePromotionsCard";
+import LongestPromotionCard from "../../../Stats/PromotionsStats/LongestPromotionCard";
+import PromotionsByClientTypeDistributionCard from "../../../Stats/PromotionsStats/PromotionsByClientTypeDistributionCard";
+import PromotionWithMostProductsCard from "../../../Stats/PromotionsStats/PromotionWithMostProductsCard";
 
 // Import the new modals
-import CampaignConfirmationModal from "../../components/Modals/CampaignConfirmationModal";
-import CampaignFormModal from "../Admin/Marketing/CampaignFormModal";
-import usePromotionDetail from "../../hooks/usePromotionDetail";
-import EditPromotionButton from "../Admin/Marketing/EditPromotionButton";
-import DeletePromotionButton from "../Admin/Marketing/DeletePromotionButton";
+import DeletePromotionButton from "../DeletePromotionButton";
+import CampaignFormModal from "../../Marketing/CampaignFormModal";
+import CampaignConfirmationModal from "../../../Modals/CampaignConfirmationModal";
+import EditPromotionButton from "../../Marketing/EditPromotionButton";
+import usePromotionDetail from "../../../../hooks/usePromotionDetail";
+import { StatsGridContainer } from "../../../Stats/StyledStatCards";
 
 const PromotionalCampaignsList = () => {
   const navigate = useNavigate();

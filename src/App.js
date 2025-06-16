@@ -24,7 +24,8 @@ import GeneralFAQPage from "./pages/GeneralFAQPage";
 import PromotionDetailPage from "./pages/PromotionDetailPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import ClientDetailPage from "./pages/ClientDetailPage";
-import AdminPromotionDetailPage from "./components/AdminPromotionDetail/AdminPromotionDetailPage";
+import AdminPromotionDetailPage from "./components/Admin/Marketing/AdminPromotionDetail/AdminPromotionDetailPage";
+
 
 function App() {
   return (
