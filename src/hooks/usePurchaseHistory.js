@@ -147,7 +147,7 @@ const usePurchaseHistory = (clientId = "") => {
             const productId = detail.prodotto.id;
             const quantity = detail.quantita;
             // Use the calculated prezzo_unitario (which considers discounted price)
-            const price = detail.prezzo_unitario;
+            const price = detail.prezzo_unitario_originale;
 
             if (!productTallies[productId]) {
               productTallies[productId] = {

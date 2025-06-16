@@ -36,7 +36,7 @@ const TopBar = () => {
     <TopBarContainer>
       <TitleContainer to={homePageUrl}>
         <LogoImage src="https://github.com/DoubleMyD/react_ottica_moderna-backup-/blob/main/public/logo192.png?raw=true" />
-        <h1>Modern Optics</h1> {/* More descriptive title */}
+        <h1>Ottica Moderna</h1> {/* More descriptive title */}
       </TitleContainer>
 
       <NavButtonsContainer>

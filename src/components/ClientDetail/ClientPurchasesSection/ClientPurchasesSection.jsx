@@ -18,7 +18,6 @@ import { useNavigate } from "react-router-dom";
 const ClientPurchasesSection = ({ clientId }) => {
   const { purchases, loading, error, mostPurchasedProduct, totalProductSpent } =
     usePurchaseHistory(clientId);
-
   const navigate = useNavigate();
 
   const handleProductClick = (productDocumentId, event) => {

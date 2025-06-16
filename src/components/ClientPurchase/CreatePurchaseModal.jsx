@@ -211,7 +211,7 @@ const CreatePurchaseModal = ({ isOpen, onClose, clientId, onSuccess }) => {
             populate: {
               dettaglio_promozionis: {
                 populate: {
-                  prodottos: { fields: ["id", "nome"] }, // Need product IDs for matching discounts
+                  prodottos: { fields: ["id", "nome", "documentId"] }, // Need product IDs for matching discounts
                 },
               },
             },
@@ -252,13 +252,102 @@ const CreatePurchaseModal = ({ isOpen, onClose, clientId, onSuccess }) => {
     }
   }, [authToken, clientId]);
 
+  // Function to validate and apply promotion
+  const validateAndApplyPromotion = useCallback(
+    (promoIdToApply, currentLineItems) => {
+      setError(null); // Clear previous errors
+
+      if (!promoIdToApply) {
+        setAppliedPromotion(null);
+        setPromotionDetails([]);
+        return;
+      }
+
+      promoIdToApply = availableClientPromotions.find(
+        (promotion) => promotion.documentId === promoIdToApply
+      )?.id;
+
+      const selectedClientPromoFull = availableClientPromotions.find(
+        (promotion) => promotion.id === Number(promoIdToApply)
+      );
+
+      if (selectedClientPromoFull && selectedClientPromoFull.promozione) {
+        const promotion = selectedClientPromoFull.promozione;
+        const details = promotion.dettaglio_promozionis || [];
+
+        // Check required products for this promotion
+        const requiredProductIdsForPromo = details.flatMap((detail) =>
+          detail.prodottos ? detail.prodottos.map((p) => p.id) : []
+        );
+
+        // Get current product IDs in cart
+        const currentProductIdsInCart = currentLineItems
+          .filter((item) => item.productId)
+          .map((item) => item.productId);
+
+        let canApplyPromotion = true;
+        let missingProducts = [];
+
+        if (requiredProductIdsForPromo.length > 0) {
+          // If the promotion targets specific products, check if ALL of them are in the cart
+          requiredProductIdsForPromo.forEach((requiredId) => {
+            if (!currentProductIdsInCart.includes(requiredId)) {
+              canApplyPromotion = false;
+              const missingProductName =
+                availableProducts.find((p) => p.id === requiredId)?.nome ||
+                `ID:${requiredId}`;
+              missingProducts.push(missingProductName);
+            }
+          });
+        }
+
+        if (!canApplyPromotion) {
+          setError(
+            `Per applicare la promozione "${
+              promotion.titolo
+            }", devi includere tutti i seguenti prodotti nel carrello: ${missingProducts.join(
+              ", "
+            )}.`
+          );
+          setAppliedPromotion(null);
+          setPromotionDetails([]);
+          // Do NOT reset selectedClientPromotionId here. Keep the dropdown selection.
+        } else {
+          setAppliedPromotion(promotion);
+          setPromotionDetails(details);
+          // Only show success alert if this is a manual selection, not auto-revalidation
+          if (selectedClientPromotionId === promoIdToApply) {
+            // Check if this was the explicit user selection
+            window.alert(
+              `Promozione "${promotion.titolo}" applicata con successo!`
+            ); // Replace with custom alert
+          }
+        }
+      } else {
+        setAppliedPromotion(null);
+        setPromotionDetails([]);
+        if (promoIdToApply) {
+          // Only set error if an ID was actually selected
+          setError("Dettagli promozione non trovati o promozione non valida.");
+        }
+      }
+    },
+    [availableClientPromotions, availableProducts, selectedClientPromotionId]
+  ); // Add selectedClientPromotionId as dependency
+
   // Recalculate prices and totals when line items or applied promotion change
   useEffect(() => {
     updateLineItemPrices();
+    // Also re-validate and apply promotion if a promotion is selected and line items change
+    if (selectedClientPromotionId) {
+      validateAndApplyPromotion(selectedClientPromotionId, lineItems);
+    }
   }, [
     lineItems.map((item) => `${item.productId}-${item.quantity}`).join("-"),
-    appliedPromotion,
+    appliedPromotion, // This dependency keeps the core price logic correct
     availableProducts,
+    selectedClientPromotionId, // This triggers price recalc if promo changes
+    validateAndApplyPromotion, // Ensure this is stable
   ]);
 
   const updateLineItemPrices = useCallback(() => {
@@ -368,70 +457,7 @@ const CreatePurchaseModal = ({ isOpen, onClose, clientId, onSuccess }) => {
 
     console.log("Promotion id : ", selectedClientPromotionId);
     setSelectedClientPromotionId(selectedPromotionDocumentId);
-    setError(null); // Clear previous errors
-
-    if (selectedId) {
-      const selectedClientPromo = availableClientPromotions.find(
-        (cp) => cp.id === parseInt(selectedId)
-      );
-      if (selectedClientPromo && selectedClientPromo.promozione) {
-        const promotion = selectedClientPromo.promozione;
-        const details = promotion.dettaglio_promozionis || [];
-
-        // Check required products for this promotion
-        const requiredProductIdsForPromo = details.flatMap((detail) =>
-          detail.prodottos ? detail.prodottos.map((p) => p.id) : []
-        );
-
-        // Get current product IDs in cart
-        const currentProductIdsInCart = lineItems
-          .filter((item) => item.productId)
-          .map((item) => item.productId);
-
-        let canApplyPromotion = true;
-        let missingProducts = [];
-
-        if (requiredProductIdsForPromo.length > 0) {
-          // If the promotion targets specific products, check if ALL of them are in the cart
-          requiredProductIdsForPromo.forEach((requiredId) => {
-            if (!currentProductIdsInCart.includes(requiredId)) {
-              canApplyPromotion = false;
-              const missingProductName =
-                availableProducts.find((p) => p.id === requiredId)?.nome ||
-                `ID:${requiredId}`;
-              missingProducts.push(missingProductName);
-            }
-          });
-        }
-
-        if (!canApplyPromotion) {
-          setError(
-            `Per applicare la promozione "${
-              promotion.titolo
-            }", devi includere tutti i seguenti prodotti nel carrello: ${missingProducts.join(
-              ", "
-            )}.`
-          );
-          setAppliedPromotion(null);
-          setPromotionDetails([]);
-          setSelectedClientPromotionId(""); // Reset dropdown
-        } else {
-          setAppliedPromotion(promotion);
-          setPromotionDetails(details);
-          window.alert(
-            `Promozione "${promotion.titolo}" applicata con successo!`
-          ); // Replace with custom alert
-        }
-      } else {
-        setAppliedPromotion(null);
-        setPromotionDetails([]);
-        setError("Dettagli promozione non trovati.");
-      }
-    } else {
-      setAppliedPromotion(null);
-      setPromotionDetails([]);
-      setError(null);
-    }
+    
   };
 
   const handleRemovePromotion = () => {
@@ -596,6 +622,11 @@ const CreatePurchaseModal = ({ isOpen, onClose, clientId, onSuccess }) => {
 
   const isLoading = localLoading || productsLoading;
 
+  // Get IDs of products already selected in other line items
+  const selectedProductIds = lineItems
+    .map((item) => item.productId)
+    .filter(Boolean); // Filter out empty strings/nulls
+
   return (
     <ModalOverlay>
       <ModalContent>
@@ -641,12 +672,21 @@ const CreatePurchaseModal = ({ isOpen, onClose, clientId, onSuccess }) => {
                     disabled={isLoading}
                   >
                     <option value="">Seleziona un prodotto</option>
-                    {availableProducts.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.nome} - €{product.prezzo_unitario.toFixed(2)}{" "}
-                        (Disp: {product.quantita_disponibili})
-                      </option>
-                    ))}
+                    {availableProducts.map(
+                      (product) =>
+                        (!selectedProductIds.includes(product.id) ||
+                          product.id === item.productId) && (
+                          <option key={product.id} value={product.id}>
+                            {product.nome} - €
+                            {product.prezzo_unitario.toFixed(2)} (Disp:{" "}
+                            {product.quantita_disponibili})
+                          </option>
+                        )
+                      //   <option key={product.id} value={product.id}>
+                      //     {product.nome} - €{product.prezzo_unitario.toFixed(2)}{" "}
+                      //     (Disp: {product.quantita_disponibili})
+                      //   </option>
+                    )}
                   </select>
                 )}
               </FormGroup>

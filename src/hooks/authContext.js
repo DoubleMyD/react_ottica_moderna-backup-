@@ -4,13 +4,13 @@ import {
     useContext,
     useEffect 
 } from "react";
-import { Role } from "../data/constants";
+import { Pages, Role } from "../data/constants";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext(); //create a global context for the authentication that can be used in all the application
 
 //wraps all the application, so that all the child components can access the context
 export const AuthProvider = ({ children }) => {
-
     // State to hold the JWT token
     const [authToken, setAuthToken] = useState(localStorage.getItem("jwt"));
 
